@@ -32,6 +32,22 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
+    icon:'',
+    name: "Employee",
+    path: "/employee",
+  },
+  {
+    icon:'',
+    name: "Product",
+    subItems: [
+      {
+        name: "Category",
+        path: "/category",
+        pro: false,
+      }
+    ]
+  },
+  {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/calendar",
