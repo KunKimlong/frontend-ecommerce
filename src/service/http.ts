@@ -2,8 +2,8 @@
 import axios from "axios";
 
 const http = axios.create({
-    baseURL: "http://localhost:168/api",  // ✅ Your backend URL
-    withCredentials: true,                 // ✅ CRITICAL: Must be true to send cookies
+    baseURL: "/api/backend",
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     }

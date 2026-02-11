@@ -18,7 +18,7 @@ export const CategoryService = {
         return http.put(`/category/${id}`, data).then(res => res.data);
     },
 
-    delete(id: number): Promise<void> {
+    delete(id: number): Promise<Category> {
         return http.delete(`/category/${id}`).then(res => res.data);
     }
 }
