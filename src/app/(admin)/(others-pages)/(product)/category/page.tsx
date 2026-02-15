@@ -10,6 +10,6 @@ export const metadata: Metadata = {
 };
 
 
-export default function CateogryPage() {
+export default function CategoryPage() {
     return <CategoryTable />;
 }

@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import { CategoryService } from "@/service/category.service";
-import { Category } from "@/type/Category";
+import {Category, CategoryData} from "@/type/Category";
 import {ActionTypes} from "@/constant/actionType";
 
 interface ModalProps {
     isOpen: boolean;
     closeModal: () => void;
     action: ActionTypes;
-    category?: Category;
-    onSuccess: (action: ActionTypes, payload: Category | number) => void;
+    category?: CategoryData;
+    onSuccess: (action: ActionTypes, payload: CategoryData | number) => void;
 }
 
 export default function CategoryModal({

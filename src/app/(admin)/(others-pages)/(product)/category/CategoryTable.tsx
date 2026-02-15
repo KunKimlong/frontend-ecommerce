@@ -8,7 +8,7 @@ import {useModal} from "@/hooks/useModal";
 import CategoryModal from "@/app/(admin)/(others-pages)/(product)/category/CategoryModal";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
-import {Category} from "@/type/Category";
+import {Category, CategoryData} from "@/type/Category";
 import {CategoryService} from "@/service/category.service";
 import {ActionTypes} from "@/constant/actionType";
 
@@ -16,13 +16,13 @@ export default function CategoryTable() {
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [selectedCategory, setSelectedCategory] = useState<Category>();
+    const [selectedCategory, setSelectedCategory] = useState<CategoryData>();
     const [action, setAction] = useState<ActionTypes>(ActionTypes.CREATE);
-    const [categories, setCategories] = useState<Category[]>([]);
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(10); // You can make this configurable
+    const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
+    const [totalItems, setTotalItems] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0); // API uses 0-based indexing
+    const [pageSize] = useState(5);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -50,26 +50,31 @@ export default function CategoryTable() {
         let isMounted = true;
 
         const fetchCategories = async () => {
-            const data = await CategoryService.getAll();
-            if (isMounted) {
-                setCategories(data);
+            try {
+                const response: Category = await CategoryService.getAll(currentPage, pageSize);
+                if (isMounted) {
+                    setCategoryData(response.categoryData);
+                    setTotalItems(response.total);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
             }
         };
 
-        fetchCategories().then();
+        fetchCategories();
 
         return () => {
             isMounted = false;
         };
-    }, [])
+    }, [currentPage, pageSize]);
 
-    const handleEditCategory = (category: Category) => {
+    const handleEditCategory = (category: CategoryData) => {
         openModal();
         setSelectedCategory(category);
         setAction(ActionTypes.UPDATE);
     }
 
-    const handleDeleteCategory = (category: Category) => {
+    const handleDeleteCategory = (category: CategoryData) => {
         openModal();
         setSelectedCategory(category);
         setAction(ActionTypes.DELETE);
@@ -82,68 +87,52 @@ export default function CategoryTable() {
 
     const applyCategoryChange = (
         action: string,
-        payload: Category | number
+        payload: CategoryData | number
     ) => {
-        setCategories((prev) => {
-            switch (action) {
-                case ActionTypes.CREATE:
-                    return [...prev, payload as Category];
-
-                case ActionTypes.UPDATE:
-                    return prev.map((cat) =>
-                        cat.id === (payload as Category).id
-                            ? (payload as Category)
-                            : cat
-                    );
-
-                case ActionTypes.DELETE:
-                    return prev.filter(
-                        (cat) => cat.id !== payload
-                    );
-
-                default:
-                    return prev;
-            }
-        });
+        if (action === ActionTypes.CREATE || action === ActionTypes.UPDATE || action === ActionTypes.DELETE) {
+            const fetchCategories = async () => {
+                try {
+                    const response: Category = await CategoryService.getAll(currentPage, pageSize);
+                    setCategoryData(response.categoryData);
+                    setTotalItems(response.total);
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                }
+            };
+            fetchCategories();
+        }
     };
 
-    // Pagination calculations
-    const totalPages = Math.ceil(categories.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentCategories = categories.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-    // Generate page numbers to display
+    const displayPage = currentPage + 1;
+
     const getPageNumbers = () => {
         const pageNumbers: (number | string)[] = [];
         const maxVisiblePages = 5;
 
         if (totalPages <= maxVisiblePages) {
-            // Show all pages if total is small
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
         } else {
-            // Always show first page
             pageNumbers.push(1);
 
-            if (currentPage > 3) {
+            if (displayPage > 3) {
                 pageNumbers.push('...');
             }
 
-            // Show pages around current page
-            const startPage = Math.max(2, currentPage - 1);
-            const endPage = Math.min(totalPages - 1, currentPage + 1);
+            const startPage = Math.max(2, displayPage - 1);
+            const endPage = Math.min(totalPages - 1, displayPage + 1);
 
             for (let i = startPage; i <= endPage; i++) {
                 pageNumbers.push(i);
             }
 
-            if (currentPage < totalPages - 2) {
+            if (displayPage < totalPages - 2) {
                 pageNumbers.push('...');
             }
 
-            // Always show last page
             if (totalPages > 1) {
                 pageNumbers.push(totalPages);
             }
@@ -154,7 +143,7 @@ export default function CategoryTable() {
 
     const handlePageChange = (page: number) => {
         if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
+            setCurrentPage(page - 1); // Convert 1-based to 0-based for API
         }
     };
 
@@ -216,13 +205,12 @@ export default function CategoryTable() {
                                         </TableRow>
                                     </TableHeader>
 
-                                    {/* Table Body */}
                                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {currentCategories.map((category, index) => (
+                                        {categoryData.map((category, index) => (
                                             <TableRow key={category.id}>
                                                 <TableCell
                                                     className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    {indexOfFirstItem + index + 1}
+                                                    {currentPage * pageSize + index + 1}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <div className="flex items-center gap-3">
@@ -264,13 +252,14 @@ export default function CategoryTable() {
 
                                 {/* Dynamic Pagination */}
                                 {totalPages > 0 && (
-                                    <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-md">
+                                    <nav aria-label="Pagination"
+                                         className="isolate inline-flex -space-x-px rounded-md p-4">
                                         {/* Previous Button */}
                                         <button
-                                            onClick={() => handlePageChange(currentPage - 1)}
-                                            disabled={currentPage === 1}
+                                            onClick={() => handlePageChange(displayPage - 1)}
+                                            disabled={currentPage === 0}
                                             className={`relative inline-flex items-center rounded-l-md px-2 py-2 inset-ring inset-ring-gray-700 focus:z-20 focus:outline-offset-0 ${
-                                                currentPage === 1
+                                                currentPage === 0
                                                     ? 'text-gray-600 cursor-not-allowed'
                                                     : 'text-gray-400 hover:bg-white/5'
                                             }`}
@@ -298,7 +287,7 @@ export default function CategoryTable() {
                                                     key={pageNumber}
                                                     onClick={() => handlePageChange(pageNumber as number)}
                                                     className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
-                                                        currentPage === pageNumber
+                                                        displayPage === pageNumber
                                                             ? 'z-10 bg-indigo-500 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
                                                             : 'text-gray-200 inset-ring inset-ring-gray-700 hover:bg-white/5'
                                                     }`}
@@ -310,10 +299,10 @@ export default function CategoryTable() {
 
                                         {/* Next Button */}
                                         <button
-                                            onClick={() => handlePageChange(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
+                                            onClick={() => handlePageChange(displayPage + 1)}
+                                            disabled={currentPage === totalPages - 1}
                                             className={`relative inline-flex items-center rounded-r-md px-2 py-2 inset-ring inset-ring-gray-700 focus:z-20 focus:outline-offset-0 ${
-                                                currentPage === totalPages
+                                                currentPage === totalPages - 1
                                                     ? 'text-gray-600 cursor-not-allowed'
                                                     : 'text-gray-400 hover:bg-white/5'
                                             }`}

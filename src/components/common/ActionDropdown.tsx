@@ -1,11 +1,11 @@
 import {PencilIcon, TrashBinIcon} from "@/icons";
 import React from "react";
-import {Category} from "@/type/Category";
+import {Category, CategoryData} from "@/type/Category";
 
 interface ActionProps {
-    category: Category;
-    onEdit: (category: Category) => void;
-    onDelete: (category: Category) => void;
+    category: CategoryData;
+    onEdit: (category: CategoryData) => void;
+    onDelete: (category: CategoryData) => void;
 }
 
 export default function ActionDropdown({category, onEdit, onDelete}: ActionProps) {
