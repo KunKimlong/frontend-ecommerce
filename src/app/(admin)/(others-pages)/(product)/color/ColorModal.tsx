@@ -1,45 +1,53 @@
 import React, {useEffect, useState} from "react";
+import {Modal} from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
-import {CategoryService} from "@/service/category.service";
-import {Category, CategoryData} from "@/type/Category";
+import {ColorService} from "@/service/color.service";
 import {ActionTypes} from "@/constant/actionType";
+import {ColorData, ColorRequest} from "@/type/Color";
 import {DefaultModal} from "@/components/ui/modal/DefaultModal";
 
 interface ModalProps {
     isOpen: boolean;
     closeModal: () => void;
     action: ActionTypes;
-    category?: CategoryData;
-    onSuccess: (action: ActionTypes, payload: CategoryData | number) => void;
+    color?: ColorData;
+    onSuccess: (action: ActionTypes, payload: ColorData | number) => void;
 }
 
-export default function CategoryModal({
-                                          isOpen,
-                                          closeModal,
-                                          action,
-                                          category,
-                                          onSuccess,
-                                      }: ModalProps) {
+export default function ColorModal({
+                                       isOpen,
+                                       closeModal,
+                                       action,
+                                       color,
+                                       onSuccess,
+                                   }: ModalProps) {
+    const COLOR_REQUIRED = "color name is required";
+    const CODE_REQUIRED = "Code is required";
+    const CODE_NOT_VALID = "Code is not valid";
+
     const [name, setName] = useState("");
+    const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
-        if (category) {
-            setName(category.name);
+        if (color) {
+            setName(color.name);
+            setCode(color.code);
         }
-    }, [category]);
+    }, [color]);
 
     useEffect(() => {
         if (!isOpen) {
             setName("");
+            setCode("");
             setError("");
         }
     }, [isOpen]);
 
     const handleSubmit = async () => {
         if (action !== ActionTypes.DELETE && !name.trim()) {
-            setError("Category name is required");
+            setError(COLOR_REQUIRED);
             return;
         }
 
@@ -49,22 +57,34 @@ export default function CategoryModal({
         try {
             switch (action) {
                 case ActionTypes.CREATE: {
-                    const created = await CategoryService.save({name});
+                    let colorRequest: ColorRequest = {name, code};
+                    if (!isValidHex(colorRequest.code)) {
+                        setError(CODE_NOT_VALID)
+                        return;
+                    }
+                    const created = await ColorService.save(colorRequest);
                     onSuccess(ActionTypes.CREATE, created);
                     break;
                 }
 
                 case ActionTypes.UPDATE: {
-                    if (!category) return;
-                    const updated = await CategoryService.update(category.id, {name});
+                    if (!color) {
+                        return;
+                    }
+                    let colorRequest: ColorRequest = {name, code};
+                    if (!isValidHex(colorRequest.code)) {
+                        setError(CODE_NOT_VALID);
+                        return;
+                    }
+                    const updated = await ColorService.update(color.id, colorRequest);
                     onSuccess(ActionTypes.UPDATE, updated);
                     break;
                 }
 
                 case ActionTypes.DELETE: {
-                    if (!category) return;
-                    await CategoryService.delete(category.id);
-                    onSuccess(ActionTypes.DELETE, category.id);
+                    if (!color) return;
+                    await ColorService.delete(color.id);
+                    onSuccess(ActionTypes.DELETE, color.id);
                     break;
                 }
             }
@@ -76,6 +96,31 @@ export default function CategoryModal({
             setLoading(false);
         }
     };
+    const isValidHex = (value: string) => {
+        return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+    };
+    const handleChangeCode = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target;
+        const cursorPos = input.selectionStart ?? 0;
+
+        let value = input.value.toUpperCase().trim();
+
+        if (!value.startsWith("#")) {
+            value = "#" + value;
+        }
+
+        setCode(value);
+
+        requestAnimationFrame(() => {
+            const pos =
+                value.startsWith("#") && cursorPos === 0
+                    ? 1
+                    : cursorPos;
+
+            input.setSelectionRange(pos, pos);
+        });
+    };
+
 
     return (
         <DefaultModal
@@ -84,9 +129,9 @@ export default function CategoryModal({
             className="max-w-[700px] p-6 lg:p-10 modal"
             header={
                 <>
-                    {action === ActionTypes.CREATE && <span>Add Category</span>}
-                    {action === ActionTypes.UPDATE && <span>Update Category</span>}
-                    {action === ActionTypes.DELETE && <span>Delete Category</span>}
+                    {action === ActionTypes.CREATE && <span>Add Color</span>}
+                    {action === ActionTypes.UPDATE && <span>Update Color</span>}
+                    {action === ActionTypes.DELETE && <span>Delete Color</span>}
                 </>
             }
             body={
@@ -99,20 +144,40 @@ export default function CategoryModal({
 
                     {action !== ActionTypes.DELETE && (
                         <div className="flex flex-wrap">
-                            <div className="w-full">
+                            <div className="w-1/2">
                                 <div className="modal-form-group">
                                     <label
-                                        htmlFor="category-name"
+                                        htmlFor="color-name"
                                         className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
                                     >
-                                        Category Name
+                                        Color Name
                                     </label>
                                     <input
-                                        id="category-name"
+                                        id="color-name"
                                         type="text"
-                                        placeholder="Enter category name"
+                                        placeholder="Enter color name"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
+                                        disabled={loading}
+                                        className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                                    />
+                                </div>
+                            </div>
+                            <div className="w-1/2">
+                                <div className="modal-form-group">
+                                    <label
+                                        htmlFor="color-code"
+                                        className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    >
+                                        Color Code
+                                    </label>
+                                    <input
+                                        id="color-code"
+                                        type="text"
+                                        placeholder="Enter color name"
+                                        value={code}
+                                        maxLength={7}
+                                        onChange={handleChangeCode}
                                         disabled={loading}
                                         className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                                     />
@@ -134,6 +199,7 @@ export default function CategoryModal({
                     )}
                 </>
             }
+
             footer={
                 <>
                     <div className="flex items-center gap-3 mt-4 modal-footer sm:justify-end">
@@ -153,7 +219,7 @@ export default function CategoryModal({
                                     ? "Delete"
                                     : action === ActionTypes.UPDATE
                                         ? "Update"
-                                        : "+ Category"}
+                                        : "+ Color"}
                         </Button>
 
                         <button

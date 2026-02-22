@@ -5,23 +5,23 @@ import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
 import React, {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
-import CategoryModal from "@/app/(admin)/(others-pages)/(product)/category/CategoryModal";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
-import {Category, CategoryData} from "@/type/Category";
-import {CategoryService} from "@/service/category.service";
+import {ColorService} from "@/service/color.service";
 import {ActionTypes} from "@/constant/actionType";
+import {Color, ColorData} from "@/type/Color";
+import ColorModal from "@/app/(admin)/(others-pages)/(product)/color/ColorModal";
 
-export default function CategoryTable() {
+export default function ColorTable() {
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [selectedCategory, setSelectedCategory] = useState<CategoryData>();
+    const [selectedColor, setSelectedColor] = useState<ColorData>();
     const [action, setAction] = useState<ActionTypes>(ActionTypes.CREATE);
 
-    const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
+    const [colorData, setColorData] = useState<ColorData[]>([]);
     const [totalItems, setTotalItems] = useState(0);
-    const [currentPage, setCurrentPage] = useState(0); // API uses 0-based indexing
+    const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(5);
 
     useEffect(() => {
@@ -49,11 +49,11 @@ export default function CategoryTable() {
     useEffect(() => {
         let isMounted = true;
 
-        const fetchCategories = async () => {
+        const fetchColors = async () => {
             try {
-                const response: Category = await CategoryService.getAll(currentPage, pageSize);
+                const response: Color = await ColorService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setCategoryData(response.categoryData);
+                    setColorData(response.colorData);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -61,45 +61,45 @@ export default function CategoryTable() {
             }
         };
 
-        fetchCategories();
+        fetchColors();
 
         return () => {
             isMounted = false;
         };
     }, [currentPage, pageSize]);
 
-    const handleEditCategory = (category: CategoryData) => {
+    const handleEditColor = (color: ColorData) => {
         openModal();
-        setSelectedCategory(category);
+        setSelectedColor(color);
         setAction(ActionTypes.UPDATE);
     }
 
-    const handleDeleteCategory = (category: CategoryData) => {
+    const handleDeleteColor = (color: ColorData) => {
         openModal();
-        setSelectedCategory(category);
+        setSelectedColor(color);
         setAction(ActionTypes.DELETE);
     }
 
     const handleCloseModal = () => {
-        setSelectedCategory(undefined);
+        setSelectedColor(undefined);
         closeModal();
     }
 
-    const applyCategoryChange = (
+    const applyColorChange = (
         action: string,
-        payload: CategoryData | number
+        payload: ColorData | number
     ) => {
         if (action === ActionTypes.CREATE || action === ActionTypes.UPDATE || action === ActionTypes.DELETE) {
-            const fetchCategories = async () => {
+            const fetchColors = async () => {
                 try {
-                    const response: Category = await CategoryService.getAll(currentPage, pageSize);
-                    setCategoryData(response.categoryData);
+                    const response: Color = await ColorService.getAll(currentPage, pageSize);
+                    setColorData(response.colorData);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching categories:', error);
                 }
             };
-            fetchCategories();
+            fetchColors();
         }
     };
 
@@ -143,24 +143,24 @@ export default function CategoryTable() {
 
     const handlePageChange = (page: number) => {
         if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page - 1); // Convert 1-based to 0-based for API
+            setCurrentPage(page - 1);
         }
     };
 
     return (
         <div>
-            <CategoryModal
+            <ColorModal
                 isOpen={isOpen}
                 closeModal={handleCloseModal}
                 action={action}
-                category={selectedCategory}
-                onSuccess={applyCategoryChange}
+                color={selectedColor}
+                onSuccess={applyColorChange}
             />
-            <PageBreadcrumb pageTitle="Category"/>
+            <PageBreadcrumb pageTitle="Color"/>
             <div className="space-y-6">
                 <div className={"flex justify-end"}>
                     <Button size="sm" variant="primary" onClick={openModalCreate}>
-                        + Category
+                        + Color
                     </Button>
                 </div>
                 <ComponentCard>
@@ -170,78 +170,91 @@ export default function CategoryTable() {
                             <div className="min-w-[1102px]">
                                 <Table>
                                     {/* Table Header */}
-                                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] text-center">
                                         <TableRow>
                                             <TableCell
                                                 isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
                                             >
                                                 N <sup>o</sup>
                                             </TableCell>
                                             <TableCell
                                                 isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
                                             >
                                                 Name
                                             </TableCell>
                                             <TableCell
                                                 isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
+                                            >
+                                                Code
+                                            </TableCell>
+                                            <TableCell
+                                                isHeader
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
                                             >
                                                 Created By
                                             </TableCell>
                                             <TableCell
                                                 isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
                                             >
                                                 Updated By
                                             </TableCell>
                                             <TableCell
                                                 isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400"
                                             >
                                                 Action
                                             </TableCell>
                                         </TableRow>
                                     </TableHeader>
 
-                                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {categoryData.map((category, index) => (
-                                            <TableRow key={category.id}>
+                                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05] text-center">
+                                        {colorData.map((color, index) => (
+                                            <TableRow key={color.id}>
                                                 <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {currentPage * pageSize + index + 1}
                                                 </TableCell>
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <div className="flex items-center gap-3">
-                                                        <div>
-                                                            <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                              {category.name}
-                                                            </span>
-                                                        </div>
+                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    {color.name}
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                            <div
+                                                                className="block font-medium text-theme-sm">
+                                                              {color.code}
+                                                            </div>
+                                                            <div className="block" style={{
+                                                                width: `30px`,
+                                                                height: `30px`,
+                                                                borderRadius: `50%`,
+                                                                backgroundColor: color.code
+                                                            }}></div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    {category.createdBy.firstName}
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    {color.createdBy.firstName}
                                                 </TableCell>
                                                 <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    {category.updatedBy.firstName}
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    {color.updatedBy.firstName}
                                                 </TableCell>
 
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
                                                     <div className="relative"
-                                                         ref={openDropdownId === category.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(category.id)}
+                                                         ref={openDropdownId === color.id ? dropdownRef : null}>
+                                                        <button onClick={() => toggleDropdown(color.id)}
                                                                 className="p-2">
                                                             <MoreDotIcon/>
                                                         </button>
-                                                        {openDropdownId === category.id && (
-                                                            <ActionDropdown data={category}
-                                                                            onEdit={handleEditCategory}
-                                                                            onDelete={handleDeleteCategory}/>
+                                                        {openDropdownId === color.id && (
+                                                            <ActionDropdown data={color}
+                                                                            onEdit={handleEditColor}
+                                                                            onDelete={handleDeleteColor}/>
                                                         )}
                                                     </div>
                                                 </TableCell>
@@ -250,7 +263,6 @@ export default function CategoryTable() {
                                     </TableBody>
                                 </Table>
 
-                                {/* Dynamic Pagination */}
                                 {totalPages > 0 && (
                                     <nav aria-label="Pagination"
                                          className="isolate inline-flex -space-x-px rounded-md p-4">

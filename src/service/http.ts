@@ -1,4 +1,3 @@
-// lib/http.ts
 import axios from "axios";
 
 const http = axios.create({
@@ -11,7 +10,6 @@ const http = axios.create({
 
 http.interceptors.request.use(
     (config) => {
-        // ✅ Also add token from cookie to Authorization header (belt and suspenders)
         if (typeof document !== 'undefined') {
             const token = document.cookie
                 .split('; ')
@@ -32,7 +30,6 @@ http.interceptors.response.use(
     (err) => {
         console.error("API Error:", err.response?.data || err.message);
         if (err.response?.status === 401) {
-            // Redirect to login
             window.location.href = '/login';
         }
         return Promise.reject(err.response?.data || err);
