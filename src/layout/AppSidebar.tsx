@@ -44,6 +44,11 @@ const navItems: NavItem[] = [
         name: "Category",
         path: "/category",
         pro: false,
+      },
+      {
+        name: "Color",
+        path: "/color",
+        pro: false,
       }
     ]
   },

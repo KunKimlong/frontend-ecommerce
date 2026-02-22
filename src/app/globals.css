@@ -738,3 +738,6 @@ span.flatpickr-weekday,
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
+.modal .modal-body .modal-form-group, .modal .modal-title{
+  padding: 10px;
+}
