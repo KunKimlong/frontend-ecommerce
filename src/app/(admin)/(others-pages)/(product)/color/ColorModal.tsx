@@ -187,15 +187,10 @@ export default function ColorModal({
                     )}
 
                     {action === ActionTypes.DELETE && (
-                        <div className="mt-5">
-                            <div className="flex flex-wrap">
-                                <div className="w-full">
-                                    <p className="mb-1.5 block font-medium text-gray-700 dark:text-gray-400">
-                                        Are you sure you want to remove this?
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <p className="mb-1.5 block font-medium modal-title text-gray-700 dark:text-gray-400">
+                            Are you sure you want to remove this?
+                        </p>
+
                     )}
                 </>
             }

@@ -250,11 +250,9 @@ export default function CategoryTable() {
                                     </TableBody>
                                 </Table>
 
-                                {/* Dynamic Pagination */}
                                 {totalPages > 0 && (
                                     <nav aria-label="Pagination"
                                          className="isolate inline-flex -space-x-px rounded-md p-4">
-                                        {/* Previous Button */}
                                         <button
                                             onClick={() => handlePageChange(displayPage - 1)}
                                             disabled={currentPage === 0}
