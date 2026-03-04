@@ -38,7 +38,8 @@ const EmployeeTable: React.FC = () => {
         user: {
             image: string;
             name: string;
-            role: string;
+            email: string;
+            date:string;
         };
         projectName: string;
         team: {
@@ -58,7 +59,8 @@ const EmployeeTable: React.FC = () => {
             user: {
                 image: "/images/user/user-17.jpg",
                 name: "Lindsey Curtis",
-                role: "Web Designer",
+                email: "Lindsey@gmail.com",
+                date:"2026-01-01"
             },
             projectName: "Agency Website",
             team: {
@@ -76,7 +78,8 @@ const EmployeeTable: React.FC = () => {
             user: {
                 image: "/images/user/user-18.jpg",
                 name: "Kaiya George",
-                role: "Project Manager",
+                email: "Kaiya@gmail.com",
+                 date:"2026-01-01"
             },
             projectName: "Technology",
             team: {
@@ -90,7 +93,8 @@ const EmployeeTable: React.FC = () => {
             user: {
                 image: "/images/user/user-17.jpg",
                 name: "Zain Geidt",
-                role: "Content Writing",
+                email: "Zain@gmail.com",
+                 date:"2026-01-01"
             },
             projectName: "Blog Writing",
             team: {
@@ -104,7 +108,8 @@ const EmployeeTable: React.FC = () => {
             user: {
                 image: "/images/user/user-20.jpg",
                 name: "Abram Schleifer",
-                role: "Digital Marketer",
+                email: "Digita@gmail.com",
+                 date:"2026-01-01"
             },
             projectName: "Social Media",
             team: {
@@ -122,7 +127,8 @@ const EmployeeTable: React.FC = () => {
             user: {
                 image: "/images/user/user-21.jpg",
                 name: "Carla George",
-                role: "Front-end Developer",
+                email: "Carla@gmail.com",
+                 date:"2026-01-01"
             },
             projectName: "Website",
             team: {
@@ -179,16 +185,35 @@ const EmployeeTable: React.FC = () => {
                                             >
                                                 Email
                                             </TableCell>
+                                               <TableCell
+                                                isHeader
+                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                            >
+                                                Join Date
+                                            </TableCell>
                                             <TableCell
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
                                                 Status
                                             </TableCell>
+                                                <TableCell
+                                                    isHeader
+                                                    className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                >
+                                                    Created By
+                                                </TableCell>
+                                                <TableCell
+                                                    isHeader
+                                                    className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                                >
+                                                    Updated By
+                                                </TableCell>
                                             <TableCell
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
+                        
                                                 Action
                                             </TableCell>
                                         </TableRow>
@@ -200,6 +225,18 @@ const EmployeeTable: React.FC = () => {
                                             <TableRow key={order.id}>
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <div className="flex items-center gap-3">
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               {order.id}
+                                                            </span>
+                                                        <div>
+
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+
+                                                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 overflow-hidden rounded-full">
                                                             <Image
                                                                 width={40}
@@ -209,39 +246,39 @@ const EmployeeTable: React.FC = () => {
                                                             />
                                                         </div>
                                                         <div>
-                        <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {order.user.name}
-                        </span>
-                                                            <span
-                                                                className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                          {order.user.role}
-                        </span>
+                                                      </div>
+                                                    </div>
+                                                </TableCell>
+                                                  <div className="px-5 py-4 sm:px-6 text-start">
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               {order.user.name}
+                                                            </span>
+                                                        <div>
+
                                                         </div>
                                                     </div>
-                                                </TableCell>
-                                                <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    {order.projectName}
-                                                </TableCell>
-                                                <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    <div className="flex -space-x-2">
-                                                        {order.team.images.map((teamImage, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="w-6 h-6 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
-                                                            >
-                                                                <Image
-                                                                    width={24}
-                                                                    height={24}
-                                                                    src={teamImage}
-                                                                    alt={`Team member ${index + 1}`}
-                                                                    className="w-full"
-                                                                />
-                                                            </div>
-                                                        ))}
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                  
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               {order.user.email}
+                                                            </span>
+                                                        <div>
+                                                        
                                                     </div>
                                                 </TableCell>
+                                                   <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                  
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               {order.user.date}
+                                                            </span>
+                                                        <div>
+                                                        
+                                                    </div>
+                                                </TableCell>
+                                                
                                                 <TableCell
                                                     className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                                                     <Badge
@@ -257,9 +294,27 @@ const EmployeeTable: React.FC = () => {
                                                         {order.status}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell>
-                                                    {order.budget}
+                                                   <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                  
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               Admin
+                                                            </span>
+                                                        <div>
+                                                        
+                                                    </div>
                                                 </TableCell>
+                                                    <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                  
+                                                          <span
+                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                               Admin
+                                                            </span>
+                                                        <div>
+                                                        
+                                                    </div>
+                                                </TableCell>
+                                            
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
                                                     <div className="relative" ref={openDropdownId === order.id ? dropdownRef : null}>
                                                         <button onClick={() => toggleDropdown(order.id)} className="p-2">
