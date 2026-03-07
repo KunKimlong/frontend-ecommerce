@@ -3,19 +3,30 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import Image from "next/image";
-import Badge from "@/components/ui/badge/Badge";
 import React, {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import EmployeeModal from "@/app/(admin)/(others-pages)/employee/EmployeeModal";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
+import { Employee, EmployeeData } from "@/type/Employee";
+import { EmployeeService } from "@/service/employee.service";
+import {ActionTypes} from "@/constant/actionType";
+import DatePicker from "@/components/form/date-picker";
 
 const EmployeeTable: React.FC = () => {
 
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [employeeData, setEmployeeData] = useState<EmployeeData[]>([]);
+    const [currentPage, setCurrentPage] = useState(0); // API uses 0-based indexing
+    const [pageSize] = useState(5);
+    const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData>();
+    const [action, setAction] = useState<ActionTypes>(ActionTypes.CREATE);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterName, setFilterName] = useState("");
+    const [filterJoinDate, setFilterJoinDate] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -33,121 +44,131 @@ const EmployeeTable: React.FC = () => {
     const toggleDropdown = (id: number) => {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
-    interface Order {
-        id: number;
-        user: {
-            image: string;
-            name: string;
-            email: string;
-            date:string;
-        };
-        projectName: string;
-        team: {
-            images: string[];
-        };
-        status: string;
-        budget: string;
-    }
+
 
     const openModalCreate = () => {
+        setAction(ActionTypes.CREATE);
+        setSelectedEmployee(undefined);
         openModal();
     }
 
-    const tableData: Order[] = [
-        {
-            id: 1,
-            user: {
-                image: "/images/user/user-17.jpg",
-                name: "Lindsey Curtis",
-                email: "Lindsey@gmail.com",
-                date:"2026-01-01"
-            },
-            projectName: "Agency Website",
-            team: {
-                images: [
-                    "/images/user/user-22.jpg",
-                    "/images/user/user-23.jpg",
-                    "/images/user/user-24.jpg",
-                ],
-            },
-            budget: "3.9K",
-            status: "Active",
-        },
-        {
-            id: 2,
-            user: {
-                image: "/images/user/user-18.jpg",
-                name: "Kaiya George",
-                email: "Kaiya@gmail.com",
-                 date:"2026-01-01"
-            },
-            projectName: "Technology",
-            team: {
-                images: ["/images/user/user-25.jpg", "/images/user/user-26.jpg"],
-            },
-            budget: "24.9K",
-            status: "Pending",
-        },
-        {
-            id: 3,
-            user: {
-                image: "/images/user/user-17.jpg",
-                name: "Zain Geidt",
-                email: "Zain@gmail.com",
-                 date:"2026-01-01"
-            },
-            projectName: "Blog Writing",
-            team: {
-                images: ["/images/user/user-27.jpg"],
-            },
-            budget: "12.7K",
-            status: "Active",
-        },
-        {
-            id: 4,
-            user: {
-                image: "/images/user/user-20.jpg",
-                name: "Abram Schleifer",
-                email: "Digita@gmail.com",
-                 date:"2026-01-01"
-            },
-            projectName: "Social Media",
-            team: {
-                images: [
-                    "/images/user/user-28.jpg",
-                    "/images/user/user-29.jpg",
-                    "/images/user/user-30.jpg",
-                ],
-            },
-            budget: "2.8K",
-            status: "Cancel",
-        },
-        {
-            id: 5,
-            user: {
-                image: "/images/user/user-21.jpg",
-                name: "Carla George",
-                email: "Carla@gmail.com",
-                 date:"2026-01-01"
-            },
-            projectName: "Website",
-            team: {
-                images: [
-                    "/images/user/user-31.jpg",
-                    "/images/user/user-32.jpg",
-                    "/images/user/user-33.jpg",
-                ],
-            },
-            budget: "4.5K",
-            status: "Active",
-        },
-    ];
+    const handleEditEmployee = (employee: EmployeeData) => {
+        setAction(ActionTypes.UPDATE);
+        setSelectedEmployee(employee);
+        openModal();
+    }
+
+    const handleDeleteEmployee = (employee: EmployeeData) => {
+        setAction(ActionTypes.DELETE);
+        setSelectedEmployee(employee);
+        openModal();
+    }
+
+    const handleViewEmployee = (employee: EmployeeData) => {
+        setAction(ActionTypes.VIEW);
+        setSelectedEmployee(employee);
+        openModal();
+    }
+
+    const handleCloseModal = () => {
+        setSelectedEmployee(undefined);
+        closeModal();
+    }
+
+    const fetchEmployees = async (name?: string, joinDate?: string) => {
+        try {
+            const response: Employee = await EmployeeService.getAll(currentPage, pageSize, name, joinDate);
+            setEmployeeData(response.employeeData);
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+        }
+    };
+
+    const handleFilter = () => {
+        setIsSearching(true);
+        fetchEmployees(filterName, filterJoinDate);
+    };
+
+    const clearFilters = () => {
+        setFilterName("");
+        setFilterJoinDate("");
+        setSearchTerm("");
+        setIsSearching(false);
+        fetchEmployees();
+    };
+
+    const handleSearchByID = async () => {
+        if (!searchTerm.trim()) {
+            fetchEmployees();
+            return;
+        }
+
+        try {
+            const id = Number(searchTerm);
+            if (isNaN(id)) {
+                alert("Please enter a valid numeric ID");
+                return;
+            }
+            const employee = await EmployeeService.getById(id);
+            setEmployeeData(employee ? [employee] : []);
+        } catch (error) {
+            console.error('Error searching employee:', error);
+            setEmployeeData([]);
+        }
+    };
+
+    useEffect(() => {
+        if (!isSearching && !searchTerm) {
+            fetchEmployees();
+        }
+    }, [currentPage, pageSize]);
+
+    const handleSuccess = () => {
+        fetchEmployees();
+    };
+    
     return (
         <div>
-            <EmployeeModal isOpen={isOpen} closeModal={closeModal}></EmployeeModal>
+            <EmployeeModal
+                isOpen={isOpen}
+                closeModal={handleCloseModal}
+                onSuccess={handleSuccess}
+                action={action}
+                employee={selectedEmployee}
+            />
             <PageBreadcrumb pageTitle="Employee"/>
             <div className="space-y-6">
-                <div className={"flex justify-end"}>
+                <div className="flex flex-wrap items-center justify-between gap-4 p-5 bg-white rounded-xl border border-gray-200 dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div className="flex flex-wrap items-center gap-4 flex-grow">
+                        <div className="w-full sm:w-auto min-w-[200px]">
+                            <input
+                                type="text"
+                                placeholder="Filter by Name..."
+                                value={filterName}
+                                onChange={(e) => setFilterName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                                className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                            />
+                        </div>
+                        <div className="w-full sm:w-auto min-w-[200px]">
+                            <DatePicker
+                                id="filter-join-date"
+                                placeholder="Filter by Join Date"
+                                defaultDate={filterJoinDate}
+                                onChange={(_, dateStr) => setFilterJoinDate(dateStr)}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button size="sm" variant="primary" onClick={handleFilter}>
+                                Filter
+                            </Button>
+                            {(filterName || filterJoinDate || searchTerm) && (
+                                <Button size="sm" variant="outline" onClick={clearFilters}>
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                     <Button size="sm" variant="primary" onClick={openModalCreate}>
                         + Employee
                     </Button>
@@ -177,7 +198,13 @@ const EmployeeTable: React.FC = () => {
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
-                                                Full Name
+                                                First Name
+                                            </TableCell>
+                                            <TableCell
+                                                isHeader
+                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                            >
+                                                  Last Name
                                             </TableCell>
                                             <TableCell
                                                 isHeader
@@ -185,30 +212,24 @@ const EmployeeTable: React.FC = () => {
                                             >
                                                 Email
                                             </TableCell>
-                                               <TableCell
+                                            <TableCell
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
-                                                Join Date
+                                                Phone
                                             </TableCell>
                                             <TableCell
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
-                                                Status
+                                                Gender
                                             </TableCell>
-                                                <TableCell
-                                                    isHeader
-                                                    className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                                >
-                                                    Created By
-                                                </TableCell>
-                                                <TableCell
-                                                    isHeader
-                                                    className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                                >
-                                                    Updated By
-                                                </TableCell>
+                                            <TableCell
+                                                isHeader
+                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                            >
+                                                Join Date
+                                            </TableCell>
                                             <TableCell
                                                 isHeader
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
@@ -221,107 +242,70 @@ const EmployeeTable: React.FC = () => {
 
                                     {/* Table Body */}
                                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {tableData.map((order) => (
-                                            <TableRow key={order.id}>
+                                        {employeeData.map((employee) => (
+                                            <TableRow key={employee.id}>
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <div className="flex items-center gap-3">
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               {order.id}
-                                                            </span>
-                                                        <div>
-
-                                                        </div>
-                                                    </div>
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.id}
+                                                    </span>
                                                 </TableCell>
 
-                                                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 overflow-hidden rounded-full">
-                                                            <Image
-                                                                width={40}
-                                                                height={40}
-                                                                src={order.user.image}
-                                                                alt={order.user.name}
+                                                            <img
+                                                                src={``}
+                                                                alt={``}
+                                                                className="h-full w-full object-cover"
                                                             />
                                                         </div>
-                                                        <div>
-                                                      </div>
                                                     </div>
                                                 </TableCell>
-                                                  <div className="px-5 py-4 sm:px-6 text-start">
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               {order.user.name}
-                                                            </span>
-                                                        <div>
-
-                                                        </div>
-                                                    </div>
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                  
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               {order.user.email}
-                                                            </span>
-                                                        <div>
-                                                        
-                                                    </div>
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.firstName}
+                                                    </span>
                                                 </TableCell>
-                                                   <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                  
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               {order.user.date}
-                                                            </span>
-                                                        <div>
-                                                        
-                                                    </div>
+
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.lastName}
+                                                    </span>
                                                 </TableCell>
-                                                
-                                                <TableCell
-                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                                                    <Badge
-                                                        size="sm"
-                                                        color={
-                                                            order.status === "Active"
-                                                                ? "success"
-                                                                : order.status === "Pending"
-                                                                    ? "warning"
-                                                                    : "error"
-                                                        }
-                                                    >
-                                                        {order.status}
-                                                    </Badge>
+
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.email}
+                                                    </span>
                                                 </TableCell>
-                                                   <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                  
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               Admin
-                                                            </span>
-                                                        <div>
-                                                        
-                                                    </div>
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.phone || "-"}
+                                                    </span>
                                                 </TableCell>
-                                                    <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                  
-                                                          <span
-                                                                className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                               Admin
-                                                            </span>
-                                                        <div>
-                                                        
-                                                    </div>
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.gender}
+                                                    </span>
                                                 </TableCell>
-                                            
+                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
+                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.joinDate}
+                                                    </span>
+                                                </TableCell>
+
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
-                                                    <div className="relative" ref={openDropdownId === order.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(order.id)} className="p-2">
+                                                    <div className="relative" ref={openDropdownId === employee.id ? dropdownRef : null}>
+                                                        <button onClick={() => toggleDropdown(employee.id)} className="p-2">
                                                             <MoreDotIcon />
                                                         </button>
-                                                        {openDropdownId === order.id && (
-                                                            <ActionDropdown id={order.id} />
+                                                        {openDropdownId === employee.id && (
+                                                            <ActionDropdown
+                                                                data={employee}
+                                                                onView={handleViewEmployee}
+                                                                onEdit={handleEditEmployee}
+                                                                onDelete={handleDeleteEmployee}
+                                                            />
                                                         )}
                                                     </div>
                                                 </TableCell>

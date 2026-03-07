@@ -51,6 +51,7 @@ export default function CategoryTable() {
 
         const fetchCategories = async () => {
             try {
+
                 const response: Category = await CategoryService.getAll(currentPage, pageSize);
                 if (isMounted) {
                     setCategoryData(response.categoryData);
