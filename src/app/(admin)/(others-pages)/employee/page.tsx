@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 
 
 export default function EmployeePage() {
-    return <EmployeeTable />;
+    return <EmployeeTable/>;
 }

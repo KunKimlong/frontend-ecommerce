@@ -5,13 +5,10 @@ export interface Employee {
     pageSize: number;
 }
 
-export interface EmployeeAsset {
+export interface EmployeeCreatedBy {
     id: number;
-    name: string;
-    path: string;
-    uuid: string;
-    type: string;
-    size: number;
+    firstName: string;
+    lastName: string;
 }
 
 export interface EmployeeData {
@@ -22,7 +19,10 @@ export interface EmployeeData {
     email: string;
     phone: string;
     joinDate: string;
-    asset?: EmployeeAsset | null;
+    assetId?: number | null;
+    imageUrl?: string | null;
+    createdBy?: EmployeeCreatedBy | null;
+    updatedBy?: EmployeeCreatedBy | null;
 }
 
 export interface EmployeeCreateRequest {
@@ -30,7 +30,7 @@ export interface EmployeeCreateRequest {
     lastName: string;
     gender: string;
     email: string;
-    password: string;
+    password?: string;
     phone: string;
     joinDate: string;
 }

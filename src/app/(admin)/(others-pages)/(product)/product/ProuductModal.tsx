@@ -1,25 +1,26 @@
 import React, {useEffect, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {ActionTypes} from "@/constant/actionType";
+import {ProductData} from "@/type/Product";
 import {DefaultModal} from "@/components/ui/modal/DefaultModal";
-import {EmployeeData} from "@/type/Employee";
-import {EmployeeService} from "@/service/employee.service";
+import {ProductService} from "@/service/product.service";
 
 interface ModalProps {
     isOpen: boolean;
     closeModal: () => void;
     action: ActionTypes;
-    employee?: EmployeeData;
-    onSuccess: (action: ActionTypes, payload: EmployeeData | number) => void;
+    product?: ProductData;
+    onSuccess: (action: ActionTypes, payload: ProductData | number) => void;
 }
 
-export default function EmployeeModal({
-                                          isOpen,
-                                          closeModal,
-                                          action,
-                                          employee,
-                                          onSuccess,
-                                      }: ModalProps) {
+export default function ProductModal({
+                                         isOpen,
+                                         closeModal,
+                                         action,
+                                         product,
+                                         onSuccess,
+                                     }: ModalProps) {
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -30,16 +31,21 @@ export default function EmployeeModal({
         }
     }, [isOpen]);
 
+
     const handleSubmit = async () => {
         setLoading(true);
         setError("");
 
         try {
-            if (action === ActionTypes.DELETE) {
-                if (!employee) return;
-                await EmployeeService.delete(employee.id);
-                onSuccess(ActionTypes.DELETE, employee.id);
+            switch (action) {
+                case ActionTypes.DELETE: {
+                    if (!product) return;
+                    await ProductService.delete(product.id);
+                    onSuccess(ActionTypes.DELETE, product.id);
+                    break;
+                }
             }
+
             closeModal();
         } catch (err: any) {
             setError(err.message || "Something went wrong");
@@ -55,7 +61,7 @@ export default function EmployeeModal({
             className="max-w-[700px] p-6 lg:p-10 modal"
             header={
                 <>
-                    {action === ActionTypes.DELETE && <span>Delete Employee</span>}
+                    {action === ActionTypes.DELETE && <span>Delete Product</span>}
                 </>
             }
             body={
@@ -68,7 +74,7 @@ export default function EmployeeModal({
 
                     {action === ActionTypes.DELETE && (
                         <p className="mb-1.5 block font-medium modal-title text-gray-700 dark:text-gray-400">
-                            Are you sure you want to remove this employee?
+                            Are you sure you want to remove this product?
                         </p>
                     )}
                 </>

@@ -4,31 +4,28 @@ import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
 import React, {useEffect, useRef, useState} from "react";
+import Image from "next/image";
 import {useModal} from "@/hooks/useModal";
-import EmployeeModal from "@/app/(admin)/(others-pages)/employee/EmployeeModal";
+import {useRouter} from "next/navigation";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
-import { Employee, EmployeeData } from "@/type/Employee";
-import { EmployeeService } from "@/service/employee.service";
+import {Employee, EmployeeData} from "@/type/Employee";
+import {EmployeeService} from "@/service/employee.service";
 import {ActionTypes} from "@/constant/actionType";
-import DatePicker from "@/components/form/date-picker";
+import EmployeeModal from "@/app/(admin)/(others-pages)/employee/EmployeeModal";
 
-const EmployeeTable: React.FC = () => {
-
+export default function EmployeeTable() {
+    const router = useRouter();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [employeeData, setEmployeeData] = useState<EmployeeData[]>([]);
-    const [currentPage, setCurrentPage] = useState(0); // API uses 0-based indexing
-    const [pageSize] = useState(5);
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData>();
-    const [action, setAction] = useState<ActionTypes>(ActionTypes.CREATE);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterName, setFilterName] = useState("");
-    const [filterJoinDate, setFilterJoinDate] = useState("");
-    const [isSearching, setIsSearching] = useState(false);
 
-    // Close dropdown when clicking outside
+    const [employeeData, setEmployeeData] = useState<EmployeeData[]>([]);
+    const [totalItems, setTotalItems] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize] = useState(5);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -36,275 +33,231 @@ const EmployeeTable: React.FC = () => {
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
     const toggleDropdown = (id: number) => {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
 
-
-    const openModalCreate = () => {
-        setAction(ActionTypes.CREATE);
-        setSelectedEmployee(undefined);
-        openModal();
-    }
-
-    const handleEditEmployee = (employee: EmployeeData) => {
-        setAction(ActionTypes.UPDATE);
-        setSelectedEmployee(employee);
-        openModal();
-    }
-
-    const handleDeleteEmployee = (employee: EmployeeData) => {
-        setAction(ActionTypes.DELETE);
-        setSelectedEmployee(employee);
-        openModal();
-    }
-
-    const handleViewEmployee = (employee: EmployeeData) => {
-        setAction(ActionTypes.VIEW);
-        setSelectedEmployee(employee);
-        openModal();
-    }
-
-    const handleCloseModal = () => {
-        setSelectedEmployee(undefined);
-        closeModal();
-    }
-
-    const fetchEmployees = async (name?: string, joinDate?: string) => {
+    const fetchEmployees = async () => {
         try {
-            const response: Employee = await EmployeeService.getAll(currentPage, pageSize, name, joinDate);
+            const response: Employee = await EmployeeService.getAll(currentPage, pageSize);
             setEmployeeData(response.employeeData);
+            setTotalItems(response.total);
         } catch (error) {
-            console.error('Error fetching employees:', error);
-        }
-    };
-
-    const handleFilter = () => {
-        setIsSearching(true);
-        fetchEmployees(filterName, filterJoinDate);
-    };
-
-    const clearFilters = () => {
-        setFilterName("");
-        setFilterJoinDate("");
-        setSearchTerm("");
-        setIsSearching(false);
-        fetchEmployees();
-    };
-
-    const handleSearchByID = async () => {
-        if (!searchTerm.trim()) {
-            fetchEmployees();
-            return;
-        }
-
-        try {
-            const id = Number(searchTerm);
-            if (isNaN(id)) {
-                alert("Please enter a valid numeric ID");
-                return;
-            }
-            const employee = await EmployeeService.getById(id);
-            setEmployeeData(employee ? [employee] : []);
-        } catch (error) {
-            console.error('Error searching employee:', error);
-            setEmployeeData([]);
+            console.error("Error fetching employees:", error);
         }
     };
 
     useEffect(() => {
-        if (!isSearching && !searchTerm) {
-            fetchEmployees();
-        }
+        let isMounted = true;
+
+        const load = async () => {
+            try {
+                const response: Employee = await EmployeeService.getAll(currentPage, pageSize);
+                if (isMounted) {
+                    setEmployeeData(response.employeeData);
+                    setTotalItems(response.total);
+                }
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+
+        load();
+        return () => {
+            isMounted = false;
+        };
     }, [currentPage, pageSize]);
 
-    const handleSuccess = () => {
-        fetchEmployees();
+    const handleEditEmployee = (employee: EmployeeData) => {
+        setOpenDropdownId(null);
+        router.push(`/employee/${employee.id}/edit`);
     };
-    
+
+    const handleDeleteEmployee = (employee: EmployeeData) => {
+        setOpenDropdownId(null);
+        setSelectedEmployee(employee);
+        openModal();
+    };
+
+    const handleCloseModal = () => {
+        setSelectedEmployee(undefined);
+        closeModal();
+    };
+
+    const applyEmployeeChange = (action: string) => {
+        if (action === ActionTypes.DELETE) {
+            fetchEmployees();
+        }
+    };
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const displayPage = currentPage + 1;
+
+    const getPageNumbers = () => {
+        const pageNumbers: (number | string)[] = [];
+        const maxVisiblePages = 5;
+
+        if (totalPages <= maxVisiblePages) {
+            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+        } else {
+            pageNumbers.push(1);
+            if (displayPage > 3) pageNumbers.push("...");
+            const startPage = Math.max(2, displayPage - 1);
+            const endPage = Math.min(totalPages - 1, displayPage + 1);
+            for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+            if (displayPage < totalPages - 2) pageNumbers.push("...");
+            if (totalPages > 1) pageNumbers.push(totalPages);
+        }
+
+        return pageNumbers;
+    };
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) setCurrentPage(page - 1);
+    };
+
     return (
         <div>
             <EmployeeModal
                 isOpen={isOpen}
                 closeModal={handleCloseModal}
-                onSuccess={handleSuccess}
-                action={action}
+                action={ActionTypes.DELETE}
                 employee={selectedEmployee}
+                onSuccess={applyEmployeeChange}
             />
+
             <PageBreadcrumb pageTitle="Employee"/>
             <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4 p-5 bg-white rounded-xl border border-gray-200 dark:border-white/[0.05] dark:bg-white/[0.03]">
-                    <div className="flex flex-wrap items-center gap-4 flex-grow">
-                        <div className="w-full sm:w-auto min-w-[200px]">
-                            <input
-                                type="text"
-                                placeholder="Filter by Name..."
-                                value={filterName}
-                                onChange={(e) => setFilterName(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-                                className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                            />
-                        </div>
-                        <div className="w-full sm:w-auto min-w-[200px]">
-                            <DatePicker
-                                id="filter-join-date"
-                                placeholder="Filter by Join Date"
-                                defaultDate={filterJoinDate}
-                                onChange={(_, dateStr) => setFilterJoinDate(dateStr)}
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button size="sm" variant="primary" onClick={handleFilter}>
-                                Filter
-                            </Button>
-                            {(filterName || filterJoinDate || searchTerm) && (
-                                <Button size="sm" variant="outline" onClick={clearFilters}>
-                                    Clear
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                    <Button size="sm" variant="primary" onClick={openModalCreate}>
+                <div className="flex justify-end">
+                    <Button size="sm" variant="primary" onClick={() => router.push("/employee/create")}>
                         + Employee
                     </Button>
                 </div>
+
                 <ComponentCard>
                     <div
                         className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                         <div className="max-w-full overflow-x-auto">
                             <div className="min-w-[1102px]">
                                 <Table>
-                                    {/* Table Header */}
                                     <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                                         <TableRow>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
-                                                ID
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
+                                                N<sup>o</sup>
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Profile
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
-                                                First Name
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
+                                                Full Name
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
-                                                  Last Name
-                                            </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Email
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Phone
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Gender
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Join Date
                                             </TableCell>
-                                            <TableCell
-                                                isHeader
-                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
-                                            >
-                        
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Action
                                             </TableCell>
                                         </TableRow>
                                     </TableHeader>
 
-                                    {/* Table Body */}
                                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {employeeData.map((employee) => (
+                                        {employeeData.map((employee, index) => (
                                             <TableRow key={employee.id}>
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.id}
-                                                    </span>
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                                                    {currentPage * pageSize + index + 1}
                                                 </TableCell>
 
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 overflow-hidden rounded-full">
-                                                            <img
-                                                                src={``}
-                                                                alt={``}
+                                                    <div
+                                                        className="w-10 h-10 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                                                        {employee.imageUrl ? (
+                                                            <Image
+                                                                src={`/media${employee.imageUrl.replace(/^\/api\/asset/, '')}`}
+                                                                alt={`${employee.firstName} ${employee.lastName}`}
+                                                                width={40}
+                                                                height={40}
                                                                 className="h-full w-full object-cover"
+                                                                unoptimized
                                                             />
-                                                        </div>
+                                                        ) : (
+                                                            <div
+                                                                className="h-full w-full flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-300">
+                                                                {`${employee.firstName?.[0] ?? ""}${employee.lastName?.[0] ?? ""}`.toUpperCase() || "N/A"}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </TableCell>
+
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.firstName}
+                                                    <span
+                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.firstName} {employee.lastName}
                                                     </span>
                                                 </TableCell>
 
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.lastName}
-                                                    </span>
-                                                </TableCell>
-
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                    <span
+                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                                                         {employee.email}
                                                     </span>
                                                 </TableCell>
+
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                    <span
+                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                                                         {employee.phone || "-"}
                                                     </span>
                                                 </TableCell>
+
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                    <span
+                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                                                         {employee.gender}
                                                     </span>
                                                 </TableCell>
+
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                    <span
+                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                                                         {employee.joinDate}
                                                     </span>
                                                 </TableCell>
 
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
-                                                    <div className="relative" ref={openDropdownId === employee.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(employee.id)} className="p-2">
-                                                            <MoreDotIcon />
+                                                    <div className="relative"
+                                                         ref={openDropdownId === employee.id ? dropdownRef : null}>
+                                                        <button onClick={() => toggleDropdown(employee.id)}
+                                                                className="p-2">
+                                                            <MoreDotIcon/>
                                                         </button>
                                                         {openDropdownId === employee.id && (
                                                             <ActionDropdown
                                                                 data={employee}
-                                                                onView={handleViewEmployee}
                                                                 onEdit={handleEditEmployee}
                                                                 onDelete={handleDeleteEmployee}
+                                                                onView={() => router.push(`/employee/${employee.id}`)}
                                                             />
                                                         )}
                                                     </div>
@@ -313,15 +266,69 @@ const EmployeeTable: React.FC = () => {
                                         ))}
                                     </TableBody>
                                 </Table>
+
+                                {totalPages > 0 && (
+                                    <nav aria-label="Pagination"
+                                         className="isolate inline-flex -space-x-px rounded-md p-4">
+                                        <button
+                                            onClick={() => handlePageChange(displayPage - 1)}
+                                            disabled={currentPage === 0}
+                                            className={`relative inline-flex items-center rounded-l-md px-2 py-2 inset-ring inset-ring-gray-700 focus:z-20 focus:outline-offset-0 ${
+                                                currentPage === 0 ? "text-gray-600 cursor-not-allowed" : "text-gray-400 hover:bg-white/5"
+                                            }`}
+                                        >
+                                            <span className="sr-only">Previous</span>
+                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                                                 className="size-5">
+                                                <path
+                                                    d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+                                                    clipRule="evenodd" fillRule="evenodd"/>
+                                            </svg>
+                                        </button>
+
+                                        {getPageNumbers().map((pageNumber, index) =>
+                                            pageNumber === "..." ? (
+                                                <span key={`ellipsis-${index}`}
+                                                      className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-400 inset-ring inset-ring-gray-700 focus:outline-offset-0">
+                                                    ...
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    key={pageNumber}
+                                                    onClick={() => handlePageChange(pageNumber as number)}
+                                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
+                                                        displayPage === pageNumber
+                                                            ? "z-10 bg-indigo-500 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                                                            : "text-gray-200 inset-ring inset-ring-gray-700 hover:bg-white/5"
+                                                    }`}
+                                                >
+                                                    {pageNumber}
+                                                </button>
+                                            )
+                                        )}
+
+                                        <button
+                                            onClick={() => handlePageChange(displayPage + 1)}
+                                            disabled={currentPage === totalPages - 1}
+                                            className={`relative inline-flex items-center rounded-r-md px-2 py-2 inset-ring inset-ring-gray-700 focus:z-20 focus:outline-offset-0 ${
+                                                currentPage === totalPages - 1 ? "text-gray-600 cursor-not-allowed" : "text-gray-400 hover:bg-white/5"
+                                            }`}
+                                        >
+                                            <span className="sr-only">Next</span>
+                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                                                 className="size-5">
+                                                <path
+                                                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                                                    clipRule="evenodd" fillRule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </nav>
+                                )}
                             </div>
                         </div>
                     </div>
                 </ComponentCard>
             </div>
-
         </div>
     );
 }
-
-
-export default EmployeeTable;
