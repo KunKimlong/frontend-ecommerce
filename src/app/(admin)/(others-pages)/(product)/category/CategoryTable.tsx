@@ -1,4 +1,4 @@
-ProductRequest"use client";
+"use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
@@ -54,7 +54,7 @@ export default function CategoryTable() {
 
                 const response: Category = await CategoryService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setCategoryData(response.categoryData);
+                    setCategoryData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -94,7 +94,7 @@ export default function CategoryTable() {
             const fetchCategories = async () => {
                 try {
                     const response: Category = await CategoryService.getAll(currentPage, pageSize);
-                    setCategoryData(response.categoryData);
+                    setCategoryData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching categories:', error);

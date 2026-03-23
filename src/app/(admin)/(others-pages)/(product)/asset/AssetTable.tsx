@@ -39,7 +39,7 @@ export default function AssetTable() {
             try {
                 const response: Asset = await AssetService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setAssetData(response.assetData);
+                    setAssetData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -67,7 +67,7 @@ export default function AssetTable() {
             const fetchAssets = async () => {
                 try {
                     const response: Asset = await AssetService.getAll(currentPage, pageSize);
-                    setAssetData(response.assetData);
+                    setAssetData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching assets:', error);

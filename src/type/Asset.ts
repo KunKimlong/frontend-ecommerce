@@ -1,7 +1,7 @@
 import {User} from "@/type/User";
 
 export interface Asset {
-    assetData: AssetData[];
+    data: AssetData[];
     total: number;
     page: number;
     pageSize: number;

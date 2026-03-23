@@ -54,9 +54,9 @@ export default function ProductForm({product}: ProductFormProps) {
                     ColorService.getAll(0, 100),
                     AssetService.getAll(0, 100),
                 ]);
-                setCategories(catRes.categoryData ?? catRes);
-                setColors(colorRes.colorData ?? colorRes);
-                setAssets(assetRes.assetData ?? assetRes);
+                setCategories(catRes.data ?? catRes);
+                setColors(colorRes.data ?? colorRes);
+                setAssets(assetRes.data ?? assetRes);
             } catch (err) {
                 console.error("Failed to load options", err);
             }

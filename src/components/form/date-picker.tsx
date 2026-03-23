@@ -28,17 +28,24 @@ export default function DatePicker({
   useEffect(() => {
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
-      static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
       defaultDate,
       onChange,
+      onOpen(_dates, _str, instance) {
+        setTimeout(() => {
+          const inputEl = document.getElementById(id) as HTMLInputElement;
+          if (inputEl && instance.calendarContainer) {
+            const width = inputEl.getBoundingClientRect().width;
+            instance.calendarContainer.style.width = `${width}px`;
+            instance.calendarContainer.style.minWidth = `${width}px`;
+          }
+        }, 0);
+      },
     });
 
     return () => {
-      if (!Array.isArray(flatPickr)) {
-        flatPickr.destroy();
-      }
+      if (!Array.isArray(flatPickr)) flatPickr.destroy();
     };
   }, [mode, onChange, id, defaultDate]);
 

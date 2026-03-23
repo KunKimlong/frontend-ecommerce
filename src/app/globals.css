@@ -741,3 +741,30 @@ span.flatpickr-weekday,
 .modal .modal-body .modal-form-group, .modal .modal-title{
   padding: 10px;
 }
+
+/* in your global CSS or flatpickr override file */
+.flatpickr-calendar {
+  width: unset !important;
+}
+
+.flatpickr-rContainer {
+  width: 100% !important;
+}
+
+.flatpickr-days {
+  width: 100% !important;
+}
+
+.dayContainer {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 0 !important;
+}
+
+.flatpickr-day {
+  max-width: unset !important;
+  width: 100% !important;
+}

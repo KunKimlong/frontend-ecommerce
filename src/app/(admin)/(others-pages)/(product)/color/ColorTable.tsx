@@ -53,7 +53,7 @@ export default function ColorTable() {
             try {
                 const response: Color = await ColorService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setColorData(response.colorData);
+                    setColorData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -93,7 +93,7 @@ export default function ColorTable() {
             const fetchColors = async () => {
                 try {
                     const response: Color = await ColorService.getAll(currentPage, pageSize);
-                    setColorData(response.colorData);
+                    setColorData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching categories:', error);

@@ -8,10 +8,20 @@ interface ActionProps {
     onView?: (data: any) => void
 }
 
-export default function ActionDropdown({data, onEdit, onDelete}: ActionProps) {
+export default function ActionDropdown({data, onEdit, onDelete, onView}: ActionProps) {
 
     return (
         <div className="absolute right-0 mt-2 -translate-x-1/2 rounded-lg bg-white  dark:bg-gray-900 shadow-lg z-50">
+            {onView && (
+                <button
+                    className="flex w-full items-center gap-2 px-8 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+                    onClick={onView}
+                >
+                    <EyeIcon/>
+                    View
+                </button>
+            )}
+
             <button
                 className="flex w-full items-center gap-2 px-8 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
                 onClick={() => onEdit(data)}

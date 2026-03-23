@@ -1,7 +1,7 @@
 import {User} from "@/type/User";
 
 export interface Color {
-    colorData: ColorData[];
+    data: ColorData[];
     total: number;
     page: number;
     pageSize: number;

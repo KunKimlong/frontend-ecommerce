@@ -1,7 +1,7 @@
 import {User} from "@/type/User";
 
 export interface Category {
-    categoryData: CategoryData[];
+    data: CategoryData[];
     total: number;
     page: number;
     pageSize: number;

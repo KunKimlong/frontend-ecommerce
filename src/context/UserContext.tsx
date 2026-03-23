@@ -21,13 +21,10 @@ export const UserProvider = ({children}: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
-        const token = Cookies.get('token');
-        console.log("Token: ", token);
+        const token = Cookies.get('authToken');
         if (token) {
             try {
                 const decoded: any = jwtDecode(token);
-                console.log("Get token from backend");
-                console.log(decoded);
                 setUser(
                     {
                         username: decoded.sub,
