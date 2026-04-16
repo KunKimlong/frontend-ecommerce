@@ -24,6 +24,8 @@ export default function BannerTable() {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(5);
+    const ACTIVE = "Active";
+    const INACTIVE = "Inactive";
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -126,7 +128,7 @@ export default function BannerTable() {
     };
 
     const getStatus = (endAt: string) => {
-        if (!endAt) return "Inactive";
+        if (!endAt) return INACTIVE;
 
         const today = new Date();
         const endDate = new Date(endAt);
@@ -135,9 +137,9 @@ export default function BannerTable() {
         endDate.setHours(0, 0, 0, 0);
 
         if (endDate > today) {
-            return "Active";
+            return ACTIVE;
         } else {
-            return "Inactive";
+            return INACTIVE;
         }
     };
 
@@ -163,80 +165,108 @@ export default function BannerTable() {
                     </Button>
                 </div>
                 <ComponentCard>
-                    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div
+                        className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                         <div className="max-w-full overflow-x-auto">
                             <div className="min-w-[1102px]">
                                 <Table>
-                                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] text-center">
+                                    <TableHeader
+                                        className="border-b border-gray-100 dark:border-white/[0.05] text-center">
                                         <TableRow>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 N<sup>o</sup>
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Label
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Header
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Type
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Product Name
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Start
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 End
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Status
                                             </TableCell>
-                                            <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                            <TableCell isHeader
+                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Action
                                             </TableCell>
                                         </TableRow>
                                     </TableHeader>
 
-                                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05] text-center">
+                                    <TableBody
+                                        className="divide-y divide-gray-100 dark:divide-white/[0.05] text-center">
                                         {bannerData.map((banner, index) => (
                                             <TableRow key={banner.id}>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {currentPage * pageSize + index + 1}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {banner.label}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {banner.headerLabel}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    <span
+                                                        className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                                                         {banner.type}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {banner.product ? (
-                                                        <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-                                                            #{banner.product.name}
+                                                        <span>
+                                                            {banner.product.name}
                                                         </span>
                                                     ) : (
                                                         <span className="text-gray-400">—</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {formatDate(banner.startAt)}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                                     {formatDate(banner.endAt)}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {getStatus(banner.endAt)}
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    <span
+                                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${
+                                                            getStatus(banner.endAt) === INACTIVE ? "bg-error-900" : "bg-green-600"
+                                                        }`}>
+                                                      {getStatus(banner.endAt)}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
-                                                    <div className="relative" ref={openDropdownId === banner.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(banner.id)} className="p-2">
+                                                    <div className="relative"
+                                                         ref={openDropdownId === banner.id ? dropdownRef : null}>
+                                                        <button onClick={() => toggleDropdown(banner.id)}
+                                                                className="p-2">
                                                             <MoreDotIcon/>
                                                         </button>
                                                         {openDropdownId === banner.id && (
@@ -254,7 +284,8 @@ export default function BannerTable() {
                                 </Table>
 
                                 {totalPages > 0 && (
-                                    <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-md p-4">
+                                    <nav aria-label="Pagination"
+                                         className="isolate inline-flex -space-x-px rounded-md p-4">
                                         <button
                                             onClick={() => handlePageChange(displayPage - 1)}
                                             disabled={currentPage === 0}
@@ -263,14 +294,18 @@ export default function BannerTable() {
                                             }`}
                                         >
                                             <span className="sr-only">Previous</span>
-                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
-                                                <path d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" fillRule="evenodd"/>
+                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                                                 className="size-5">
+                                                <path
+                                                    d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+                                                    clipRule="evenodd" fillRule="evenodd"/>
                                             </svg>
                                         </button>
 
                                         {getPageNumbers().map((pageNumber, index) =>
                                             pageNumber === "..." ? (
-                                                <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-400 inset-ring inset-ring-gray-700 focus:outline-offset-0">
+                                                <span key={`ellipsis-${index}`}
+                                                      className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-400 inset-ring inset-ring-gray-700 focus:outline-offset-0">
                                                     ...
                                                 </span>
                                             ) : (
@@ -296,8 +331,11 @@ export default function BannerTable() {
                                             }`}
                                         >
                                             <span className="sr-only">Next</span>
-                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
-                                                <path d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" fillRule="evenodd"/>
+                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+                                                 className="size-5">
+                                                <path
+                                                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                                                    clipRule="evenodd" fillRule="evenodd"/>
                                             </svg>
                                         </button>
                                     </nav>

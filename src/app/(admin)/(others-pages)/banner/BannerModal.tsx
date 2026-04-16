@@ -62,8 +62,8 @@ export default function BannerModal({
             body={
                 <>
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-sm text-red-700">{error}</p>
+                        <div className="mt-4 p-3 bg-error-50 border border-error-200 rounded-lg">
+                            <p className="text-sm text-error-700">{error}</p>
                         </div>
                     )}
                     {action === ActionTypes.DELETE && (

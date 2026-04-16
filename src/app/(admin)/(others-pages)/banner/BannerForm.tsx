@@ -1,5 +1,5 @@
 "use client";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
@@ -9,33 +9,37 @@ import {ProductService} from "@/service/product.service";
 import {BannerService} from "@/service/banner.service";
 import {AssetData} from "@/type/Asset";
 import {ProductData} from "@/type/Product";
-import {BannerData} from "@/type/Banner";
+import {BannerData, BannerType} from "@/type/Banner";
 import DatePicker from "@/components/form/date-picker";
 
 interface BannerFormProps {
     banner?: BannerData;
 }
 
-const BANNER_TYPES = ["HERO", "SALE", "NEW_ARRIVAL", "FEATURED", "PROMOTION"];
 
 export default function BannerForm({banner}: BannerFormProps) {
     const router = useRouter();
     const isEdit = !!banner;
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Form fields
     const [label, setLabel] = useState(banner?.label ?? "");
     const [headerLabel, setHeaderLabel] = useState(banner?.headerLabel ?? "");
-    const [type, setType] = useState(banner?.type ?? "");
+    const [bannerTypeId, setBannerTypeId] = useState<number | string>(banner?.bannerType?.id ?? "");
     const [description, setDescription] = useState(banner?.description ?? "");
     const [buttonName, setButtonName] = useState(banner?.buttonName ?? "");
     const [startAt, setStartAt] = useState(banner?.startAt?.slice(0, 10) ?? "");
     const [endAt, setEndAt] = useState(banner?.endAt?.slice(0, 10) ?? "");
-    const [selectedProductId, setSelectedProductId] = useState<number | null>(banner?.productId ?? null);
-    const [selectedAssetId, setSelectedAssetId] = useState<number | null>(banner?.assetId ?? null);
+    const [selectedProductId, setSelectedProductId] = useState<number | null>(banner?.product?.id ?? null);
+
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+        banner?.asset?.uuid ? `/media/image/${banner.asset.uuid}` : null
+    );
 
     // Data
+    const [bannerTypes, setBannerTypes] = useState<BannerType[]>([]);
     const [products, setProducts] = useState<ProductData[]>([]);
-    const [assets, setAssets] = useState<AssetData[]>([]);
     const [productSearch, setProductSearch] = useState("");
 
     // UI state
@@ -45,12 +49,22 @@ export default function BannerForm({banner}: BannerFormProps) {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const [productRes, assetRes] = await Promise.all([
+                const [productRes, typesRes] = await Promise.all([
                     ProductService.getAll(0, 100),
-                    AssetService.getAll(0, 100),
+                    BannerService.getTypes(),
                 ]);
                 setProducts(productRes.data ?? productRes);
-                setAssets(assetRes.data ?? assetRes);
+
+                // Handle both simple string array and object array and make sure it's an array
+                const typesData = (typesRes as any).data || typesRes;
+                let types = Array.isArray(typesData) ? typesData : [];
+
+                // If the response is an array of strings, convert to BannerType objects for consistency
+                if (types.length > 0 && typeof types[0] === 'string') {
+                    types = types.map((name: string, index: number) => ({id: index, name}));
+                }
+
+                setBannerTypes(types);
             } catch (err) {
                 console.error("Failed to load options", err);
             }
@@ -58,23 +72,61 @@ export default function BannerForm({banner}: BannerFormProps) {
         fetchOptions();
     }, []);
 
-    const selectedProduct = products.find((p) => p.id === selectedProductId) ?? null;
-    const selectedAsset = assets.find((a) => a.id === selectedAssetId) ?? null;
+    const selectedProduct = useMemo(() =>
+            products.find((p) => p.id === selectedProductId) ?? null,
+        [products, selectedProductId]);
 
-    const filteredProducts = products.filter((p) =>
-        p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-        (p.category?.name ?? "").toLowerCase().includes(productSearch.toLowerCase())
-    );
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    const filteredProducts = useMemo(() =>
+            products.filter((p) =>
+                p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+                (p.category?.name ?? "").toLowerCase().includes(productSearch.toLowerCase())
+            ),
+        [products, productSearch]);
 
     const formatPrice = (value: number) =>
         new Intl.NumberFormat("en-US", {style: "currency", currency: "USD"}).format(value);
 
     const handleSubmit = async () => {
-        if (!label.trim()) {setError("Label is required"); return;}
-        if (!headerLabel.trim()) {setError("Header label is required"); return;}
-        if (!type) {setError("Type is required"); return;}
-        if (!startAt) {setError("Start date is required"); return;}
-        if (!endAt) {setError("End date is required"); return;}
+        if (!label.trim()) {
+            setError("Label is required");
+            return;
+        }
+        if (!headerLabel.trim()) {
+            setError("Header label is required");
+            return;
+        }
+        if (!bannerTypeId) {
+            setError("Type is required");
+            return;
+        }
+        if (!startAt) {
+            setError("Start date is required");
+            return;
+        }
+        if (!endAt) {
+            setError("End date is required");
+            return;
+        }
 
         setLoading(true);
         setError("");
@@ -83,20 +135,19 @@ export default function BannerForm({banner}: BannerFormProps) {
             const payload = {
                 label,
                 headerLabel,
-                type,
+                bannerTypeId: Number(bannerTypeId),
                 description,
                 buttonName,
                 productId: selectedProductId,
-                assetId: selectedAssetId,
+                assetId: null, // assetId is handled via file upload on backend
                 startAt,
                 endAt,
             };
 
             if (isEdit && banner) {
-                await BannerService.update(banner.id, payload);
+                await BannerService.update(banner.id, payload as any, selectedFile ?? undefined);
             } else {
-                console.log("creating")
-                await BannerService.save(payload);
+                await BannerService.save(payload as any, selectedFile ?? undefined);
             }
 
             router.push("/banner");
@@ -135,7 +186,10 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             type="text"
                                             placeholder="e.g. Summer Sale"
                                             value={label}
-                                            onChange={(e) => setLabel(e.target.value)}
+                                            onChange={(e) => {
+                                                setLabel(e.target.value);
+                                                if (error) setError("");
+                                            }}
                                             disabled={loading}
                                             className={inputClass}
                                         />
@@ -147,7 +201,10 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             type="text"
                                             placeholder="e.g. New Season Collection"
                                             value={headerLabel}
-                                            onChange={(e) => setHeaderLabel(e.target.value)}
+                                            onChange={(e) => {
+                                                setHeaderLabel(e.target.value);
+                                                if (error) setError("");
+                                            }}
                                             disabled={loading}
                                             className={inputClass}
                                         />
@@ -159,14 +216,19 @@ export default function BannerForm({banner}: BannerFormProps) {
                                         <label htmlFor="banner-type" className={labelClass}>Type</label>
                                         <select
                                             id="banner-type"
-                                            value={type}
-                                            onChange={(e) => setType(e.target.value)}
+                                            value={bannerTypeId}
+                                            onChange={(e) => {
+                                                setBannerTypeId(e.target.value);
+                                                if (error) setError("");
+                                            }}
                                             disabled={loading}
                                             className={inputClass}
                                         >
                                             <option value="">Select type</option>
-                                            {BANNER_TYPES.map((t) => (
-                                                <option key={t} value={t}>{t.replace("_", " ")}</option>
+                                            {bannerTypes.map((t: BannerType) => (
+                                                <option key={t.id} value={t.id}>
+                                                    {t.name.replace("_", " ")}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
@@ -205,7 +267,10 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             placeholder="Select date"
                                             defaultDate={startAt}
                                             disabled={loading}
-                                            onChange={(_, dateStr) => setStartAt(dateStr)}
+                                            onChange={(_, dateStr) => {
+                                                setStartAt(dateStr);
+                                                if (error) setError("");
+                                            }}
                                         />
                                     </div>
                                     <div>
@@ -215,65 +280,64 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             placeholder="Select date"
                                             defaultDate={endAt}
                                             disabled={loading}
-                                            onChange={(_, dateStr) => setEndAt(dateStr)}
+                                            onChange={(_, dateStr) => {
+                                                setEndAt(dateStr);
+                                                if (error) setError("");
+                                            }}
                                         />
                                     </div>
                                 </div>
                             </div>
                         </ComponentCard>
 
-                        {/* ── Asset picker ── */}
+                        {/* ── Image upload ── */}
                         <ComponentCard>
                             <div className="p-6 lg:p-8">
-                                <label className={labelClass}>
-                                    Banner Image
-                                    {selectedAsset && (
-                                        <span className="ml-2 text-xs text-brand-600 dark:text-brand-400 font-normal">
-                                            {selectedAsset.name} selected
-                                        </span>
-                                    )}
-                                </label>
-                                {assets.length === 0 ? (
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">No assets available</p>
-                                ) : (
-                                    <div className="mt-1 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-                                        {assets.map((asset) => {
-                                            const isSelected = selectedAssetId === asset.id;
-                                            return (
-                                                <button
-                                                    key={asset.id}
-                                                    type="button"
-                                                    onClick={() => setSelectedAssetId(isSelected ? null : asset.id)}
-                                                    disabled={loading}
-                                                    title={asset.name}
-                                                    className={`relative rounded-lg overflow-hidden border-2 transition-all focus:outline-none ${
-                                                        isSelected
-                                                            ? "border-brand-500 ring-2 ring-brand-500/30"
-                                                            : "border-gray-200 hover:border-gray-400 dark:border-gray-700 dark:hover:border-gray-500"
-                                                    }`}
-                                                >
-                                                    <img
-                                                        src={"/media" + asset.path}
-                                                        alt={asset.name}
-                                                        className="w-full h-[72px] object-cover"
-                                                    />
-                                                    {isSelected && (
-                                                        <div className="absolute top-1 right-1">
-                                                            <div className="bg-brand-500 rounded-full p-0.5 shadow">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-white">
-                                                                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd"/>
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate px-1 py-0.5 text-left bg-white dark:bg-gray-900">
-                                                        {asset.name}
-                                                    </p>
-                                                </button>
-                                            );
-                                        })}
+                                <label className={labelClass}>Banner Image</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-full h-44 overflow-hidden rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                                        {previewUrl ? (
+                                            <img
+                                                src={previewUrl}
+                                                alt="Banner preview"
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center">
+                                                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                                <p className="mt-2 text-xs text-gray-400">No image selected</p>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                    <div className="flex flex-col gap-2">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            disabled={loading}
+                                            className="hidden"
+                                            id="banner-image-upload"
+                                        />
+                                        <label
+                                            htmlFor="banner-image-upload"
+                                            className="cursor-pointer inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors"
+                                        >
+                                            Choose Image
+                                        </label>
+                                        {previewUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveImage}
+                                                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </ComponentCard>
 
@@ -290,7 +354,8 @@ export default function BannerForm({banner}: BannerFormProps) {
                                     <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                                         <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
                                             <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
-                                            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5"
+                                                  strokeLinecap="round"/>
                                         </svg>
                                     </span>
                                     <input
@@ -305,7 +370,8 @@ export default function BannerForm({banner}: BannerFormProps) {
                                 {/* List */}
                                 <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
                                     {filteredProducts.length === 0 ? (
-                                        <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">No products found</p>
+                                        <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">No
+                                            products found</p>
                                     ) : (
                                         filteredProducts.map((product) => {
                                             const isSelected = selectedProductId === product.id;
@@ -315,14 +381,14 @@ export default function BannerForm({banner}: BannerFormProps) {
                                                     type="button"
                                                     onClick={() => setSelectedProductId(isSelected ? null : product.id)}
                                                     disabled={loading}
-                                                    className={`flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
-                                                        isSelected
-                                                            ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 dark:border-brand-500"
-                                                            : "border-gray-200 hover:border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
+                                                    className={`flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg border transition-all ${isSelected
+                                                        ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 dark:border-brand-500"
+                                                        : "border-gray-200 hover:border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
                                                     }`}
                                                 >
                                                     {/* Product image / placeholder */}
-                                                    <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                                                    <div
+                                                        className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
                                                         {product.assets && product.assets.length > 0 ? (
                                                             <img
                                                                 src={"/media/image/" + product.assets[0].uuid}
@@ -330,9 +396,12 @@ export default function BannerForm({banner}: BannerFormProps) {
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         ) : (
-                                                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24">
-                                                                <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-                                                                <path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/>
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none"
+                                                                 viewBox="0 0 24 24">
+                                                                <rect x="3" y="3" width="18" height="18" rx="3"
+                                                                      stroke="currentColor" strokeWidth="1.5"/>
+                                                                <path d="M3 9h18" stroke="currentColor"
+                                                                      strokeWidth="1.5"/>
                                                             </svg>
                                                         )}
                                                     </div>
@@ -348,14 +417,15 @@ export default function BannerForm({banner}: BannerFormProps) {
                                                     </div>
 
                                                     {/* Price */}
-                                                    <span className={`text-sm font-semibold flex-shrink-0 ${isSelected ? "text-brand-600 dark:text-brand-400" : "text-gray-700 dark:text-gray-300"}`}>
+                                                    <span
+                                                        className={`text-sm font-semibold flex-shrink-0 ${isSelected ? "text-brand-600 dark:text-brand-400" : "text-gray-700 dark:text-gray-300"}`}>
                                                         {formatPrice(product.salePrice)}
                                                     </span>
 
                                                     {/* Radio dot */}
-                                                    <span className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                                        isSelected ? "border-brand-500" : "border-gray-300 dark:border-gray-600"
-                                                    }`}>
+                                                    <span
+                                                        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? "border-brand-500" : "border-gray-300 dark:border-gray-600"
+                                                        }`}>
                                                         {isSelected && (
                                                             <span className="w-2 h-2 rounded-full bg-brand-500 block"/>
                                                         )}
@@ -392,21 +462,39 @@ export default function BannerForm({banner}: BannerFormProps) {
                             <div className="p-5">
                                 <p className={`${labelClass} mb-4`}>Selected Product</p>
 
-                                {!selectedProduct ? (
+                                {!selectedProductId || !selectedProduct ? (
                                     <div className="flex flex-col items-center justify-center py-10 text-center">
-                                        <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
-                                            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24">
-                                                <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-                                                <path d="M3 9h18M9 21V9" stroke="currentColor" strokeWidth="1.5"/>
-                                            </svg>
+                                        <div
+                                            className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                                            {selectedProductId && !selectedProduct ? (
+                                                <svg className="w-6 h-6 text-brand-500 animate-spin" fill="none"
+                                                     viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10"
+                                                            stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor"
+                                                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24">
+                                                    <rect x="3" y="3" width="18" height="18" rx="3"
+                                                          stroke="currentColor"
+                                                          strokeWidth="1.5"/>
+                                                    <path d="M3 9h18M9 21V9" stroke="currentColor" strokeWidth="1.5"/>
+                                                </svg>
+                                            )}
                                         </div>
-                                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No product selected</p>
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Pick a product from the list</p>
+                                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            {selectedProductId && !selectedProduct ? "Searching product…" : "No product selected"}
+                                        </p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                            {selectedProductId && !selectedProduct ? "Please wait a moment" : "Pick a product from the list"}
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
                                         {/* Product image */}
-                                        <div className="w-full h-44 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                        <div
+                                            className="w-full h-44 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
                                             {selectedProduct.assets && selectedProduct.assets.length > 0 ? (
                                                 <img
                                                     src={"/media/image/" + selectedProduct.assets[0].uuid}
@@ -414,8 +502,10 @@ export default function BannerForm({banner}: BannerFormProps) {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <svg className="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24">
-                                                    <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.2"/>
+                                                <svg className="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none"
+                                                     viewBox="0 0 24 24">
+                                                    <rect x="3" y="3" width="18" height="18" rx="3"
+                                                          stroke="currentColor" strokeWidth="1.2"/>
                                                     <path d="M3 9h18" stroke="currentColor" strokeWidth="1.2"/>
                                                 </svg>
                                             )}
@@ -436,11 +526,11 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             <span className="text-xl font-bold text-brand-600 dark:text-brand-400">
                                                 {formatPrice(selectedProduct.salePrice)}
                                             </span>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                selectedProduct.stockQty > 0
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${selectedProduct.stockQty > 0
                                                     ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                                     : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                            }`}>
+                                                }`}>
                                                 {selectedProduct.stockQty > 0 ? `In stock · ${selectedProduct.stockQty}` : "Out of stock"}
                                             </span>
                                         </div>
@@ -449,11 +539,13 @@ export default function BannerForm({banner}: BannerFormProps) {
                                         <div className="border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500 dark:text-gray-400">Import price</span>
-                                                <span className="font-medium text-gray-700 dark:text-gray-300">{formatPrice(selectedProduct.importPrice)}</span>
+                                                <span
+                                                    className="font-medium text-gray-700 dark:text-gray-300">{formatPrice(selectedProduct.importPrice)}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500 dark:text-gray-400">Stock qty</span>
-                                                <span className="font-medium text-gray-700 dark:text-gray-300">{selectedProduct.stockQty}</span>
+                                                <span
+                                                    className="font-medium text-gray-700 dark:text-gray-300">{selectedProduct.stockQty}</span>
                                             </div>
                                             {selectedProduct.colors && selectedProduct.colors.length > 0 && (
                                                 <div className="flex justify-between items-center text-sm">
@@ -487,7 +579,8 @@ export default function BannerForm({banner}: BannerFormProps) {
                                             className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 20 20">
-                                                <path d="M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                                <path d="M4 10h12" stroke="currentColor" strokeWidth="1.5"
+                                                      strokeLinecap="round"/>
                                             </svg>
                                             Remove product
                                         </button>
