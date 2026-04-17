@@ -19,7 +19,6 @@ export interface EmployeeData {
     email: string;
     phone: string;
     joinDate: string;
-    assetId?: number | null;
     imageUrl?: string | null;
     createdBy?: EmployeeCreatedBy | null;
     updatedBy?: EmployeeCreatedBy | null;

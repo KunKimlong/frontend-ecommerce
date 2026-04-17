@@ -1,18 +1,13 @@
 // contexts/UserContext.tsx
 import {createContext, useContext, useEffect, useState, ReactNode} from 'react';
-import {jwtDecode} from 'jwt-decode';
 import Cookies from 'js-cookie';
-
-interface User {
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-}
+import {User} from "@/type/User";
+import {AuthService} from "@/service/auth.service";
 
 interface UserContextType {
     user: User | null;
-    setUser: (user: User) => void;
+    setUser: (user: User | null) => void;
+    logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -20,19 +15,28 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({children}: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
+    const logout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            Cookies.remove('authToken');
+            setUser(null);
+            window.location.href = '/signin';
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
+
     useEffect(() => {
         const token = Cookies.get('authToken');
         if (token) {
             try {
-                const decoded: any = jwtDecode(token);
-                setUser(
-                    {
-                        username: decoded.sub,
-                        email: decoded.email,
-                        firstName: decoded.firstName,
-                        lastName: decoded.lastName,
-                    }
-                );
+
+                 AuthService.me().then((user) =>{
+                    setUser(user);
+                }).catch((err) => {
+                    console.error('Failed to fetch user', err);
+                    setUser(null);
+                });
             } catch (err) {
                 console.error('Invalid token', err);
             }
@@ -40,7 +44,7 @@ export const UserProvider = ({children}: { children: ReactNode }) => {
     }, []);
 
     return (
-        <UserContext.Provider value={{user, setUser}}>
+        <UserContext.Provider value={{user, setUser, logout}}>
             {children}
         </UserContext.Provider>
     );
