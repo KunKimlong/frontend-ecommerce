@@ -1,5 +1,4 @@
 import {EyeIcon, PencilIcon, TrashBinIcon} from "@/icons";
-import React from "react";
 
 interface ActionProps {
     data: any;

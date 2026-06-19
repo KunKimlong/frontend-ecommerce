@@ -1,5 +1,5 @@
 "use client";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {usePathname} from "next/navigation";
@@ -46,8 +46,8 @@ const navItems: NavItem[] = [
         pro: false,
       },
       {
-        name: "Color",
-        path: "/color",
+        name: "Option",
+        path: "/option",
         pro: false,
       },
       {
@@ -268,7 +268,6 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => path === pathname;
    const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 "use client"
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {BannerService} from "@/service/banner.service";
 import BannerForm from "@/app/(admin)/(others-pages)/banner/BannerForm";
 import {useParams} from "next/navigation";

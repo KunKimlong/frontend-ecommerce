@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
 
 import { ApexOptions } from "apexcharts";
-
+import { colors } from "@/constant/colors";
 import dynamic from "next/dynamic";
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -16,7 +15,7 @@ export default function LineChartOne() {
       position: "top",
       horizontalAlign: "left",
     },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
+    colors: [colors.primary, colors.brand[300]],
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,

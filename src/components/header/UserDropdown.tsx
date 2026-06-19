@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, {useState} from "react";
+import {useState} from "react";
 import {Dropdown} from "../ui/dropdown/Dropdown";
 import {DropdownItem} from "../ui/dropdown/DropdownItem";
 import {useUser} from "@/context/UserContext";
@@ -33,6 +33,7 @@ export default function UserDropdown() {
                         height={44}
                         src={user.imageUrl}
                         alt="User"
+                        unoptimized
                     />
                 ) : (
                     <div
