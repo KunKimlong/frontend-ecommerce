@@ -1,5 +1,4 @@
 import {Metadata} from "next";
-import React from "react";
 import EmployeeTable from "@/app/(admin)/(others-pages)/employee/EmployeeTable";
 
 

@@ -5,7 +5,7 @@ import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import {ChevronLeftIcon, EyeCloseIcon, EyeIcon} from "@/icons";
 import Link from "next/link";
-import React, {useState} from "react";
+import {useState} from "react";
 import {useRouter} from 'next/navigation';
 
 export default function SignInForm() {

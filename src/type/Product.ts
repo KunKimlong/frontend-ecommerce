@@ -1,5 +1,5 @@
 import {CategoryData} from "@/type/Category";
-import {ColorData} from "@/type/Color";
+import {OptionValueData} from "@/type/Option";
 import {AssetData} from "@/type/Asset";
 
 export interface Product {
@@ -13,21 +13,37 @@ export interface ProductData {
     id: number;
     name: string;
     description: string;
-    importPrice: number;
     salePrice: number;
-    stockQty: number;
     category: CategoryData;
-    colors: ColorData[];
+    variants: ProductVariantData[];
     assets: AssetData[];
 }
 
-export interface ProductRequest{
+export interface ProductVariantData {
+    id: number;
     name: string;
-    description: string;
-    importPrice: number;
+    price: number;
     salePrice: number;
     stockQty: number;
+    optionValues: OptionValueData[];
+    assets: AssetData[];
+}
+
+export interface ProductRequest {
+    name: string;
+    description: string;
+    salePrice: number;
     categoryId: number;
-    colorIds: number[];
-    assets?: number[];
+    variants: ProductVariantRequest[];
+    assetIds?: number[];
+}
+
+export interface ProductVariantRequest {
+    id?: number;
+    name: string;
+    price: number;
+    salePrice: number;
+    stockQty: number;
+    optionValueIds: number[];
+    assetIds: number[];
 }

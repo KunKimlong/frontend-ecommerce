@@ -3,7 +3,7 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import React, {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
 import {MoreDotIcon} from "@/icons";
@@ -82,7 +82,7 @@ export default function ProductTable() {
         closeModal();
     };
 
-    const applyProductChange = (action: string, payload: ProductData | number) => {
+    const applyProductChange = (action: string, _payload: ProductData | number) => {
         if (action === ActionTypes.DELETE) {
             fetchProducts();
         }
@@ -153,7 +153,7 @@ export default function ProductTable() {
                                                 Name
                                             </TableCell>
                                             <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
-                                                Import Price
+                                                Variants
                                             </TableCell>
                                             <TableCell isHeader className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Sale Price
@@ -171,43 +171,49 @@ export default function ProductTable() {
                                     </TableHeader>
 
                                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05] text-center">
-                                        {productData.map((product, index) => (
-                                            <TableRow key={product.id}>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {currentPage * pageSize + index + 1}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {product.name}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {formatPrice(product.importPrice)}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {formatPrice(product.salePrice)}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {product.stockQty}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                    {product.category?.name ?? "-"}
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-sm">
-                                                    <div className="relative" ref={openDropdownId === product.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(product.id)} className="p-2">
-                                                            <MoreDotIcon/>
-                                                        </button>
-                                                        {openDropdownId === product.id && (
-                                                            <ActionDropdown
-                                                                data={product}
-                                                                onEdit={handleEditProduct}
-                                                                onDelete={handleDeleteProduct}
-                                                                onView={() => router.push(`/product/${product.id}`)}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {productData.map((product, index) => {
+                                            const variantCount = product.variants?.length ?? 0;
+                                            const totalStock = product.variants?.reduce((sum, v) => sum + v.stockQty, 0) ?? 0;
+                                            return (
+                                                <TableRow key={product.id}>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        {currentPage * pageSize + index + 1}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400 font-medium">
+                                                        {product.name}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400">
+                                                            {variantCount} {variantCount === 1 ? "variant" : "variants"}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        {formatPrice(product.salePrice)}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        {totalStock}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        {product.category?.name ?? "-"}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3 text-gray-500 text-sm">
+                                                        <div className="relative" ref={openDropdownId === product.id ? dropdownRef : null}>
+                                                            <button onClick={() => toggleDropdown(product.id)} className="p-2">
+                                                                <MoreDotIcon/>
+                                                            </button>
+                                                            {openDropdownId === product.id && (
+                                                                <ActionDropdown
+                                                                    data={product}
+                                                                    onEdit={handleEditProduct}
+                                                                    onDelete={handleDeleteProduct}
+                                                                    onView={() => router.push(`/product/${product.id}`)}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
 

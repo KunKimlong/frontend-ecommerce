@@ -1,6 +1,6 @@
 
 "use client";
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {ActionTypes} from "@/constant/actionType";
 import {BannerData} from "@/type/Banner";

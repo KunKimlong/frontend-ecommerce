@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface Option {
   value: string;
@@ -39,7 +39,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
     if (onChange) onChange(newSelectedOptions);
   };
 
-  const removeOption = (index: number, value: string) => {
+  const removeOption = (_index: number, value: string) => {
     const newSelectedOptions = selectedOptions.filter((opt) => opt !== value);
     setSelectedOptions(newSelectedOptions);
     if (onChange) onChange(newSelectedOptions);

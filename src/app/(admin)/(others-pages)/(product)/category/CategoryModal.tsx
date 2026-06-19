@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {CategoryService} from "@/service/category.service";
-import {Category, CategoryData} from "@/type/Category";
+import {CategoryData} from "@/type/Category";
 import {ActionTypes} from "@/constant/actionType";
 import {DefaultModal} from "@/components/ui/modal/DefaultModal";
 

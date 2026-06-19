@@ -15,6 +15,7 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -24,6 +25,7 @@ export default function ProductDetailPage() {
                 if (data.assets?.length) {
                     setSelectedImage("/media/image/" + data.assets[0].uuid);
                 }
+                setSelectedVariantId(data.variants?.[0]?.id ?? null);
             } catch (err) {
                 setError("Failed to load product");
             } finally {
@@ -35,6 +37,9 @@ export default function ProductDetailPage() {
 
     const formatPrice = (value: number) =>
         new Intl.NumberFormat("en-US", {style: "currency", currency: "USD"}).format(value);
+
+    const getAssetUrl = (asset: ProductData["assets"][number]) =>
+        asset.uuid ? "/media/image/" + asset.uuid : "/media" + asset.path;
 
     if (loading) {
         return (
@@ -89,7 +94,7 @@ export default function ProductDetailPage() {
                                     <img
                                         src={selectedImage}
                                         alt={product.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                     />
                                 ) : (
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -116,7 +121,7 @@ export default function ProductDetailPage() {
                                             <img
                                                 src={"/media/image/" + asset.uuid}
                                                 alt={asset.name}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-contain"
                                             />
                                         </button>
                                     ))}
@@ -151,18 +156,12 @@ export default function ProductDetailPage() {
                         <ComponentCard>
                             <div className="p-5">
                                 <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                                    Pricing
+                                    Base Sale Price
                                 </h2>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="rounded-xl bg-gray-50 dark:bg-white/[0.03] p-3 text-center">
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Import</p>
-                                        <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
-                                            {formatPrice(product.importPrice)}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-xl bg-gray-50 dark:bg-white/[0.03] p-3 text-center">
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Sale</p>
-                                        <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-xl bg-gray-50 dark:bg-white/[0.03] p-3 text-center col-span-2">
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Base Sale Price</p>
+                                        <p className="text-xl font-bold text-brand-600 dark:text-brand-400">
                                             {formatPrice(product.salePrice)}
                                         </p>
                                     </div>
@@ -170,54 +169,116 @@ export default function ProductDetailPage() {
                             </div>
                         </ComponentCard>
 
-                        <ComponentCard>
-                            <div className="p-5">
-                                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                                    Stock
-                                </h2>
-                                <div className="flex items-center gap-3">
-                                    <span className={`text-3xl font-bold ${
-                                        product.stockQty === 0
-                                            ? "text-red-500"
-                                            : product.stockQty < 10
-                                                ? "text-yellow-500"
-                                                : "text-green-500"
-                                    }`}>
-                                        {product.stockQty}
-                                    </span>
-                                    <span className="text-sm text-gray-400 dark:text-gray-500">units available</span>
-                                    <span className={`ml-auto px-2.5 py-1 rounded-full text-xs font-medium ${
-                                        product.stockQty === 0
-                                            ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                            : product.stockQty < 10
-                                                ? "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                                : "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400"
-                                    }`}>
-                                        {product.stockQty === 0 ? "Out of Stock" : product.stockQty < 10 ? "Low Stock" : "In Stock"}
-                                    </span>
-                                </div>
-                            </div>
-                        </ComponentCard>
+                        {(() => {
+                            const totalStock = product.variants?.reduce((sum, v) => sum + v.stockQty, 0) ?? 0;
+                            return (
+                                <ComponentCard>
+                                    <div className="p-5">
+                                        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                                            Total Stock
+                                        </h2>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-3xl font-bold ${
+                                                totalStock === 0
+                                                    ? "text-red-500"
+                                                    : totalStock < 10
+                                                        ? "text-yellow-500"
+                                                        : "text-green-500"
+                                            }`}>
+                                                {totalStock}
+                                            </span>
+                                            <span className="text-sm text-gray-400 dark:text-gray-500">units available</span>
+                                            <span className={`ml-auto px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                totalStock === 0
+                                                    ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                                    : totalStock < 10
+                                                        ? "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                                        : "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400"
+                                            }`}>
+                                                {totalStock === 0 ? "Out of Stock" : totalStock < 10 ? "Low Stock" : "In Stock"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </ComponentCard>
+                            );
+                        })()}
 
-                        {product.colors && product.colors.length > 0 && (
+                        {product.variants && product.variants.length > 0 && (
                             <ComponentCard>
-                                <div className="p-5">
-                                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                                        Colors
+                                <div className="p-5 space-y-4">
+                                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Product Variants
                                     </h2>
-                                    <div className="flex flex-wrap gap-2">
-                                        {product.colors.map((color) => (
-                                            <div
-                                                key={color.id}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-400"
-                                            >
-                                                <span
-                                                    className="inline-block w-3 h-3 rounded-full border border-white/20 shadow-sm"
-                                                    style={{backgroundColor: color.code}}
-                                                />
-                                                {color.name}
-                                            </div>
-                                        ))}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+                                                <tr>
+                                                    <th className="px-3 py-2">Variant Name</th>
+                                                    <th className="px-3 py-2">Attributes</th>
+                                                    <th className="px-3 py-2">Price</th>
+                                                    <th className="px-3 py-2">Sale Price</th>
+                                                    <th className="px-3 py-2">Stock</th>
+                                                    <th className="px-3 py-2"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                                {product.variants.map((v) => (
+                                                    <tr
+                                                        key={v.id}
+                                                        onClick={() => setSelectedVariantId(v.id)}
+                                                        className={`bg-white dark:bg-transparent cursor-pointer transition-colors ${
+                                                            selectedVariantId === v.id
+                                                                ? "bg-brand-50/70 dark:bg-brand-900/20"
+                                                                : "hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                                        }`}
+                                                    >
+                                                        <td className="px-3 py-3 font-medium text-gray-900 dark:text-white">
+                                                            <div className="flex items-center gap-2">
+                                                                {v.assets && v.assets.length > 0 ? (
+                                                                    <img
+                                                                        src={getAssetUrl(v.assets[0])}
+                                                                        alt={v.name}
+                                                                        className="w-8 h-8 rounded-md object-cover flex-shrink-0"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] text-gray-400">
+                                                                        No Image
+                                                                    </div>
+                                                                )}
+                                                                <span>{v.name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 py-3">
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {v.optionValues?.map((val) => (
+                                                                    <span
+                                                                        key={val.id}
+                                                                        className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                                                        title={val.option.name}
+                                                                    >
+                                                                        {val.name}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 py-3">{formatPrice(v.price)}</td>
+                                                        <td className="px-3 py-3 font-semibold text-brand-600 dark:text-brand-400">{formatPrice(v.salePrice)}</td>
+                                                        <td className="px-3 py-3 font-medium">{v.stockQty}</td>
+                                                        <td className="px-3 py-3">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    router.push(`/product/${product.id}/variant/${v.id}`);
+                                                                }}
+                                                                className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20 transition-colors whitespace-nowrap"
+                                                            >
+                                                                View
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </ComponentCard>
