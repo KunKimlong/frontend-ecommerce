@@ -213,6 +213,7 @@ export default function EmployeeTable() {
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <span
                                                         className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                        {employee.gender == "MALE" ? "Mr. " : "Ms. "}
                                                         {employee.firstName} {employee.lastName}
                                                     </span>
                                                 </TableCell>
@@ -234,14 +235,14 @@ export default function EmployeeTable() {
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <span
                                                         className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.gender}
+                                                        {employee.gender || "-"}
                                                     </span>
                                                 </TableCell>
 
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <span
                                                         className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.joinDate}
+                                                        {employee.joinDate || "-"}
                                                     </span>
                                                 </TableCell>
 

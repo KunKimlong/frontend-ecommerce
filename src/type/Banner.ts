@@ -14,10 +14,11 @@ export interface BannerData {
     label: string;
     headerLabel: string;
     type: string;
+    bannerType?: BannerType;
     description: string;
     buttonName: string;
-    product: ProductData;
-    assetId: number;
+    productId?: number;
+    product?: ProductData;
     asset?: AssetData;
     startAt: string;
     endAt: string;
@@ -28,11 +29,16 @@ export interface BannerData {
 export interface BannerRequest {
     label: string;
     headerLabel: string;
-    type: string;
+    bannerTypeId: number | null;
     description: string;
     buttonName: string;
     productId: number | null;
     assetId: number | null;
     startAt: string;
     endAt: string;
+}
+
+export interface BannerType {
+    id: number;
+    name: string;
 }
