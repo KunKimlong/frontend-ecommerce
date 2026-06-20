@@ -2,27 +2,26 @@ import {useEffect, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {ActionTypes} from "@/constant/actionType";
 import {DefaultModal} from "@/components/ui/modal/DefaultModal";
-import {EmployeeData} from "@/type/Employee";
-import {EmployeeService} from "@/service/employee.service";
+import {RoleData} from "@/type/Role";
+import {RoleService} from "@/service/role.service";
 
 interface ModalProps {
     isOpen: boolean;
     closeModal: () => void;
     action: ActionTypes;
-    employee?: EmployeeData;
-    onSuccess: (action: ActionTypes, payload: EmployeeData | number) => void;
+    role?: RoleData;
+    onSuccess: (action: ActionTypes) => void;
 }
 
-export default function EmployeeModal({
-                                          isOpen,
-                                          closeModal,
-                                          action,
-                                          employee,
-                                          onSuccess,
-                                      }: ModalProps) {
+export default function RoleModal({
+                                      isOpen,
+                                      closeModal,
+                                      action,
+                                      role,
+                                      onSuccess,
+                                  }: ModalProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
 
     useEffect(() => {
         if (!isOpen) {
@@ -36,9 +35,9 @@ export default function EmployeeModal({
 
         try {
             if (action === ActionTypes.DELETE) {
-                if (!employee) return;
-                await EmployeeService.delete(employee.id);
-                onSuccess(ActionTypes.DELETE, employee.id);
+                if (!role) return;
+                await RoleService.delete(role.id);
+                onSuccess(ActionTypes.DELETE);
             }
             closeModal();
         } catch (err: any) {
@@ -55,7 +54,7 @@ export default function EmployeeModal({
             className="max-w-[700px] p-6 lg:p-10 modal"
             header={
                 <>
-                    {action === ActionTypes.DELETE && <span>Delete Employee</span>}
+                    {action === ActionTypes.DELETE && <span>Delete Role</span>}
                 </>
             }
             body={
@@ -68,7 +67,7 @@ export default function EmployeeModal({
 
                     {action === ActionTypes.DELETE && (
                         <p className="mb-1.5 block font-medium modal-title text-gray-700 dark:text-gray-400">
-                            Are you sure you want to remove this employee?
+                            Are you sure you want to remove the role &quot;{role?.name}&quot;?
                         </p>
                     )}
                 </>

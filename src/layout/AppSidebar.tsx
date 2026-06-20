@@ -33,8 +33,8 @@ const navItems: NavItem[] = [
   },
   {
     icon:'',
-    name: "Employee",
-    path: "/employee",
+    name: "Users",
+    path: "/users",
   },
   {
     icon:'',
@@ -66,6 +66,22 @@ const navItems: NavItem[] = [
     icon: '',
     name: "Banner",
     path: "/banner",
+  },
+  {
+    icon: '',
+    name: "Access Control",
+    subItems: [
+      {
+        name: "Roles",
+        path: "/role",
+        pro: false,
+      },
+      {
+        name: "Permissions",
+        path: "/permission",
+        pro: false,
+      },
+    ]
   },
   {
     icon: <CalenderIcon />,
