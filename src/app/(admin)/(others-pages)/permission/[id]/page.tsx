@@ -3,22 +3,21 @@ import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
-import Button from "@/components/ui/button/Button";
 import {PermissionService} from "@/service/permission.service";
-import {PermissionResponse} from "@/type/Permission";
+import {PermissionData} from "@/type/Permission";
 
 export default function PermissionDetailPage() {
     const {id} = useParams<{ id: string }>();
     const router = useRouter();
 
-    const [permission, setPermission] = useState<PermissionResponse | undefined>(undefined);
+    const [permission, setPermission] = useState<PermissionData | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchPermission = async () => {
             try {
-                const data: PermissionResponse = await PermissionService.getById(Number(id));
+                const data: PermissionData = await PermissionService.getById(Number(id));
                 setPermission(data);
             } catch {
                 setError("Failed to load permission");
@@ -62,13 +61,6 @@ export default function PermissionDetailPage() {
                         </svg>
                         Back to Permissions
                     </button>
-                    <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => router.push(`/permission/${permission.id}/edit`)}
-                    >
-                        Edit Permission
-                    </Button>
                 </div>
 
                 <ComponentCard>

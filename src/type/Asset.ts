@@ -1,4 +1,4 @@
-import {User} from "@/type/User";
+import {AuditableResult} from "@/type/User";
 
 export interface Asset {
     data: AssetData[];
@@ -11,6 +11,6 @@ export interface AssetData{
     name: string;
     uuid: string;
     path: string;
-    createdBy: User;
-    updatedBy: User;
+    createdBy: AuditableResult;
+    updatedBy: AuditableResult;
 }

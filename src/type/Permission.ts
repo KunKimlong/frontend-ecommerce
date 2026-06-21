@@ -11,18 +11,3 @@ export interface PermissionData {
     description: string;
     module: string;
 }
-
-export interface PermissionResponse {
-    id: number;
-    name: string;
-    description: string;
-    module: string;
-    createdBy: any;
-    updatedBy: any;
-}
-
-export interface PermissionRequest {
-    name: string;
-    description: string;
-    module: string;
-}

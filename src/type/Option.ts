@@ -1,4 +1,4 @@
-import {User} from "@/type/User";
+import {AuditableResult, User} from "@/type/User";
 
 export interface Option {
     data: OptionData[];
@@ -10,8 +10,8 @@ export interface Option {
 export interface OptionData {
     id: number;
     name: string;
-    createdBy: User;
-    updatedBy: User;
+    createdBy: AuditableResult;
+    updatedBy: AuditableResult;
 }
 
 export interface OptionRequest {
@@ -29,8 +29,8 @@ export interface OptionValueData {
     id: number;
     name: string;
     option: OptionData;
-    createdBy: User;
-    updatedBy: User;
+    createdBy: AuditableResult;
+    updatedBy: AuditableResult;
 }
 
 export interface OptionValueRequest {

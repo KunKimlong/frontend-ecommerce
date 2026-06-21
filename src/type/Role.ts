@@ -1,3 +1,5 @@
+import {AuditableResult} from "@/type/User";
+
 export interface Role {
     data: RoleResponse[];
     total: number;
@@ -16,8 +18,8 @@ export interface RoleResponse {
     name: string;
     description: string;
     permissions: PermissionItem[];
-    createdBy: any;
-    updatedBy: any;
+    createdBy: AuditableResult;
+    updatedBy: AuditableResult;
 }
 
 export interface PermissionItem {

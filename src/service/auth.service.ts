@@ -1,8 +1,8 @@
 import http from "@/service/http";
-import {User} from "@/type/User";
+import {MeResponse} from "@/type/Auth";
 
 export const AuthService = {
-   me() :Promise<User>{
+   me() :Promise<MeResponse>{
        return http("/auth/me").then((res) => res.data);
    }
 }

@@ -1,53 +1,16 @@
 "use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import {useEffect, useRef, useState} from "react";
-import {useModal} from "@/hooks/useModal";
-import {useRouter} from "next/navigation";
-import {MoreDotIcon} from "@/icons";
-import ActionDropdown from "@/components/common/ActionDropdown";
+import {useEffect, useState} from "react";
 import {PermissionService} from "@/service/permission.service";
-import {ActionTypes} from "@/constant/actionType";
 import {PermissionData, Permission} from "@/type/Permission";
-import PermissionModal from "@/app/(admin)/(others-pages)/permission/PermissionModal";
 
 export default function PermissionTable() {
-    const router = useRouter();
-    const {isOpen, openModal, closeModal} = useModal();
-    const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const [selectedPermission, setSelectedPermission] = useState<PermissionData>();
-
     const [permissionData, setPermissionData] = useState<PermissionData[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(20);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setOpenDropdownId(null);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const toggleDropdown = (id: number) => {
-        setOpenDropdownId(openDropdownId === id ? null : id);
-    };
-
-    const fetchPermissions = async () => {
-        try {
-            const response: Permission = await PermissionService.getAll(currentPage, pageSize);
-            setPermissionData(response.data);
-            setTotalItems(response.total);
-        } catch (error) {
-            console.error("Error fetching permissions:", error);
-        }
-    };
 
     useEffect(() => {
         let isMounted = true;
@@ -67,28 +30,6 @@ export default function PermissionTable() {
             isMounted = false;
         };
     }, [currentPage, pageSize]);
-
-    const handleEditPermission = (permission: PermissionData) => {
-        setOpenDropdownId(null);
-        router.push(`/permission/${permission.id}/edit`);
-    };
-
-    const handleDeletePermission = (permission: PermissionData) => {
-        setOpenDropdownId(null);
-        setSelectedPermission(permission);
-        openModal();
-    };
-
-    const handleCloseModal = () => {
-        setSelectedPermission(undefined);
-        closeModal();
-    };
-
-    const applyPermissionChange = (action: string) => {
-        if (action === ActionTypes.DELETE) {
-            fetchPermissions();
-        }
-    };
 
     const totalPages = Math.ceil(totalItems / pageSize);
     const displayPage = currentPage + 1;
@@ -116,22 +57,8 @@ export default function PermissionTable() {
 
     return (
         <div>
-            <PermissionModal
-                isOpen={isOpen}
-                closeModal={handleCloseModal}
-                action={ActionTypes.DELETE}
-                permission={selectedPermission}
-                onSuccess={applyPermissionChange}
-            />
-
             <PageBreadcrumb pageTitle="Permission"/>
             <div className="space-y-6">
-                <div className="flex justify-end">
-                    <Button size="sm" variant="primary" onClick={() => router.push("/permission/create")}>
-                        + Permission
-                    </Button>
-                </div>
-
                 <ComponentCard>
                     <div
                         className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -155,10 +82,6 @@ export default function PermissionTable() {
                                             <TableCell isHeader
                                                        className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
                                                 Description
-                                            </TableCell>
-                                            <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Action
                                             </TableCell>
                                         </TableRow>
                                     </TableHeader>
@@ -187,23 +110,6 @@ export default function PermissionTable() {
                                                         className="block text-gray-500 text-theme-sm dark:text-gray-400">
                                                         {permission.description || "-"}
                                                     </span>
-                                                </TableCell>
-                                                <TableCell className="px-4 py-3 text-gray-500 text-sm">
-                                                    <div className="relative"
-                                                         ref={openDropdownId === permission.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(permission.id)}
-                                                                className="p-2">
-                                                            <MoreDotIcon/>
-                                                        </button>
-                                                        {openDropdownId === permission.id && (
-                                                            <ActionDropdown
-                                                                data={permission}
-                                                                onEdit={handleEditPermission}
-                                                                onDelete={handleDeletePermission}
-                                                                onView={() => router.push(`/permission/${permission.id}`)}
-                                                            />
-                                                        )}
-                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

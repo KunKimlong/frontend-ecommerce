@@ -20,7 +20,7 @@ export default function UserTable() {
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [selectedUser, setSelectedUser] = useState<UserData>();
-    const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [userData, setUserData] = useState<UserData[]>([]);
     const [totalItems, setTotalItems] = useState(0);
