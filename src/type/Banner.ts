@@ -1,4 +1,4 @@
-import {User} from "@/type/User";
+import {AuditableResult} from "@/type/User";
 import {AssetData} from "@/type/Asset";
 import {ProductData} from "@/type/Product";
 
@@ -22,8 +22,8 @@ export interface BannerData {
     asset?: AssetData;
     startAt: string;
     endAt: string;
-    createdBy: User;
-    updatedBy: User;
+    createdBy: AuditableResult | null;
+    updatedBy: AuditableResult | null;
 }
 
 export interface BannerRequest {

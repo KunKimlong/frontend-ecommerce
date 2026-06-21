@@ -5,6 +5,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
 import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
+import {useUser} from "@/context/UserContext";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
 import {OptionService} from "@/service/option.service";
@@ -14,6 +15,7 @@ import OptionModal from "@/app/(admin)/(others-pages)/(product)/option/OptionMod
 
 export default function OptionTable() {
     const {isOpen, openModal, closeModal} = useModal();
+    const {can} = useUser();
     const [activeTab, setActiveTab] = useState<"option" | "value">("option");
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -227,9 +229,11 @@ export default function OptionTable() {
                         </button>
                     </div>
 
-                    <Button size="sm" variant="primary" onClick={openModalCreate}>
-                        + {activeTab === "option" ? "Option" : "Option Value"}
-                    </Button>
+                    {can(activeTab === "option" ? "option:create" : "option_value:create") && (
+                        <Button size="sm" variant="primary" onClick={openModalCreate}>
+                            + {activeTab === "option" ? "Option" : "Option Value"}
+                        </Button>
+                    )}
                 </div>
 
                 <ComponentCard>
@@ -288,6 +292,7 @@ export default function OptionTable() {
                                                                     data={opt}
                                                                     onEdit={handleEdit}
                                                                     onDelete={handleDelete}
+                                                                    module="option"
                                                                 />
                                                             )}
                                                         </div>
@@ -324,6 +329,7 @@ export default function OptionTable() {
                                                                     data={val}
                                                                     onEdit={handleEdit}
                                                                     onDelete={handleDelete}
+                                                                    module="option_value"
                                                                 />
                                                             )}
                                                         </div>

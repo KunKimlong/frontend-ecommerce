@@ -7,6 +7,7 @@ import {useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
+import {useUser} from "@/context/UserContext";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
 import {UserService} from "@/service/user.service";
@@ -16,6 +17,7 @@ import UserModal from "@/app/(admin)/(others-pages)/users/UserModal";
 
 export default function UserTable() {
     const router = useRouter();
+    const {can} = useUser();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -139,9 +141,11 @@ export default function UserTable() {
                             className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                         />
                     </div>
-                    <Button size="sm" variant="primary" onClick={() => router.push("/users/create")}>
-                        + User
-                    </Button>
+                    {can("employee:create") && (
+                        <Button size="sm" variant="primary" onClick={() => router.push("/users/create")}>
+                            + User
+                        </Button>
+                    )}
                 </div>
 
                 <ComponentCard>
@@ -265,6 +269,7 @@ export default function UserTable() {
                                                                 onEdit={handleEditUser}
                                                                 onDelete={handleDeleteUser}
                                                                 onView={() => router.push(`/users/${user.id}`)}
+                                                                module="employee"
                                                             />
                                                         )}
                                                     </div>

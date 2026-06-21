@@ -10,7 +10,7 @@ import { useState ,useEffect,useRef} from "react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const {logoUrl, storeName} = useStoreLogo();
+  const {logoUrl, storeName, loading} = useStoreLogo();
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -95,6 +95,10 @@ const AppHeader: React.FC = () => {
                       className="h-full w-full object-cover object-center"
                   />
                 </div>
+            ) : loading ? (
+                <div
+                    className="h-8 w-[154px] animate-pulse rounded-md border border-gray-200 bg-gray-200 dark:border-white/[0.08] dark:bg-white/[0.06]"
+                />
             ) : (
                 <>
                   <Image

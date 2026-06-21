@@ -6,6 +6,7 @@ import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/u
 import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
+import {useUser} from "@/context/UserContext";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
 import {RoleService} from "@/service/role.service";
@@ -15,6 +16,7 @@ import RoleModal from "@/app/(admin)/(others-pages)/role/RoleModal";
 
 export default function RoleTable() {
     const router = useRouter();
+    const {can} = useUser();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -127,9 +129,11 @@ export default function RoleTable() {
             <PageBreadcrumb pageTitle="Role"/>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button size="sm" variant="primary" onClick={() => router.push("/role/create")}>
-                        + Role
-                    </Button>
+                    {can("role:create") && (
+                        <Button size="sm" variant="primary" onClick={() => router.push("/role/create")}>
+                            + Role
+                        </Button>
+                    )}
                 </div>
 
                 <ComponentCard>
@@ -191,6 +195,7 @@ export default function RoleTable() {
                                                                 onEdit={handleEditRole}
                                                                 onDelete={handleDeleteRole}
                                                                 onView={() => router.push(`/role/${role.id}`)}
+                                                                module="role"
                                                             />
                                                         )}
                                                     </div>

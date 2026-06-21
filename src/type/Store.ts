@@ -1,4 +1,4 @@
-import {User} from "@/type/User";
+import {AuditableResult} from "@/type/User";
 
 export interface Store {
     data: StoreData[];
@@ -17,8 +17,8 @@ export interface StoreData {
     supportEmail: string;
     supportPhoneNumber: string;
     isActive: boolean;
-    createdBy: User | null;
-    updatedBy: User | null;
+    createdBy: AuditableResult | null;
+    updatedBy: AuditableResult | null;
 }
 
 export interface StoreRequest {

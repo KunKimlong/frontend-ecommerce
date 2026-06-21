@@ -6,6 +6,7 @@ import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/u
 import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
+import {useUser} from "@/context/UserContext";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
 import {BannerService} from "@/service/banner.service";
@@ -15,6 +16,7 @@ import BannerModal from "@/app/(admin)/(others-pages)/banner/BannerModal";
 
 export default function BannerTable() {
     const router = useRouter();
+    const {can} = useUser();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,6 +71,11 @@ export default function BannerTable() {
             isMounted = false;
         };
     }, [currentPage, pageSize]);
+
+    const handleViewBanner = (banner: BannerData) => {
+        setOpenDropdownId(null)
+        router.push(`/banner/${banner.id}`);
+    };
 
     const handleEditBanner = (banner: BannerData) => {
         setOpenDropdownId(null);
@@ -156,13 +163,15 @@ export default function BannerTable() {
             <PageBreadcrumb pageTitle="Banner"/>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => router.push("/banner/create")}
-                    >
-                        + Banner
-                    </Button>
+                    {can("banner:create") && (
+                        <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => router.push("/banner/create")}
+                        >
+                            + Banner
+                        </Button>
+                    )}
                 </div>
                 <ComponentCard>
                     <div
@@ -272,8 +281,10 @@ export default function BannerTable() {
                                                         {openDropdownId === banner.id && (
                                                             <ActionDropdown
                                                                 data={banner}
+                                                                onView={handleViewBanner}
                                                                 onEdit={handleEditBanner}
                                                                 onDelete={handleDeleteBanner}
+                                                                module="banner"
                                                             />
                                                         )}
                                                     </div>

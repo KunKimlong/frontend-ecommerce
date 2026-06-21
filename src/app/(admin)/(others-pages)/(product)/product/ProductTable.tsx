@@ -6,6 +6,7 @@ import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/u
 import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
+import {useUser} from "@/context/UserContext";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
 import {ProductService} from "@/service/product.service";
@@ -15,6 +16,7 @@ import ProductModal from "@/app/(admin)/(others-pages)/(product)/product/Prouduc
 
 export default function ProductTable() {
     const router = useRouter();
+    const {can} = useUser();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -131,13 +133,15 @@ export default function ProductTable() {
             <PageBreadcrumb pageTitle="Product"/>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => router.push("/product/create")}
-                    >
-                        + Product
-                    </Button>
+                    {can("product:create") && (
+                        <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => router.push("/product/create")}
+                        >
+                            + Product
+                        </Button>
+                    )}
                 </div>
                 <ComponentCard>
                     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -207,6 +211,7 @@ export default function ProductTable() {
                                                                     onEdit={handleEditProduct}
                                                                     onDelete={handleDeleteProduct}
                                                                     onView={() => router.push(`/product/${product.id}`)}
+                                                                    module="product"
                                                                 />
                                                             )}
                                                         </div>

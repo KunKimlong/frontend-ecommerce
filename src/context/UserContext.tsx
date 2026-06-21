@@ -7,6 +7,7 @@ interface UserContextType {
     user: MeResponse | null;
     setUser: (user: MeResponse | null) => void;
     logout: () => Promise<void>;
+    can: (permission: string) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -37,8 +38,12 @@ export const UserProvider = ({children}: { children: ReactNode }) => {
         }
     }, []);
 
+    const can = (permission: string): boolean => {
+        return user?.permissions?.includes(permission) ?? false;
+    };
+
     return (
-        <UserContext.Provider value={{user, setUser, logout}}>
+        <UserContext.Provider value={{user, setUser, logout, can}}>
             {children}
         </UserContext.Provider>
     );

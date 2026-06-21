@@ -5,6 +5,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
 import React, {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
+import {useUser} from "@/context/UserContext";
 import CategoryModal from "@/app/(admin)/(others-pages)/(product)/category/CategoryModal";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
@@ -14,6 +15,7 @@ import {ActionTypes} from "@/constant/actionType";
 
 export default function CategoryTable() {
     const {isOpen, openModal, closeModal} = useModal();
+    const {can} = useUser();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<CategoryData>();
@@ -158,9 +160,11 @@ export default function CategoryTable() {
             <PageBreadcrumb pageTitle="Category"/>
             <div className="space-y-6">
                 <div className={"flex justify-end"}>
-                    <Button size="sm" variant="primary" onClick={openModalCreate}>
-                        + Category
-                    </Button>
+                    {can("category:create") && (
+                        <Button size="sm" variant="primary" onClick={openModalCreate}>
+                            + Category
+                        </Button>
+                    )}
                 </div>
                 <ComponentCard>
                     <div
@@ -240,7 +244,8 @@ export default function CategoryTable() {
                                                         {openDropdownId === category.id && (
                                                             <ActionDropdown data={category}
                                                                             onEdit={handleEditCategory}
-                                                                            onDelete={handleDeleteCategory}/>
+                                                                            onDelete={handleDeleteCategory}
+                                                                            module="category"/>
                                                         )}
                                                     </div>
                                                 </TableCell>
