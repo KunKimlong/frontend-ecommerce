@@ -1,6 +1,4 @@
-"use client";
-
-import React, {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {ActionTypes} from "@/constant/actionType";
 import {DefaultModal} from "@/components/ui/modal/DefaultModal";

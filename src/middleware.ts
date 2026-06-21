@@ -101,9 +101,6 @@ function isValidToken(token: string | undefined): boolean {
             }
         }
 
-        // Optional: Check other claims (issuer, audience, etc.)
-        // if (payload.iss !== 'your-issuer') return false;
-
         return true;
     } catch (error) {
         console.error('[Middleware] Token validation error:', error);
@@ -220,9 +217,6 @@ export async function middleware(request: NextRequest) {
 
     // Optional: Add user info to headers for server components
     const response = NextResponse.next();
-
-    // You can add custom headers here if needed
-    // response.headers.set('x-user-authenticated', 'true');
 
     return response;
 }

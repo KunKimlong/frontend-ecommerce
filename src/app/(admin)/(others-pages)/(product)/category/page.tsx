@@ -1,5 +1,4 @@
 import {Metadata} from "next";
-import React from "react";
 import CategoryTable from "@/app/(admin)/(others-pages)/(product)/category/CategoryTable";
 
 

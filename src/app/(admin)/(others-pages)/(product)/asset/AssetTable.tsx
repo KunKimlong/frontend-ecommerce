@@ -1,17 +1,18 @@
 "use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import ComponentCard from "@/components/common/ComponentCard";
-import React, {useEffect, useState} from "react";
+import ComponentCard from "@/components/common/ComponentCard";  
+import {useEffect, useState} from "react";
 import {useModal} from "@/hooks/useModal";
-import {CategoryData} from "@/type/Category";
 import {ActionTypes} from "@/constant/actionType";
 import {InfoIcon, TrashBinIcon} from "@/icons";
 import {AssetService} from "@/service/asset.service";
 import {Asset, AssetData} from "@/type/Asset";
 import AssetModal from "@/app/(admin)/(others-pages)/(product)/asset/AssetModal";
+import BulkAssetModal from "@/app/(admin)/(others-pages)/(product)/asset/BulkAssetModal";
 
 export default function AssetTable() {
     const {isOpen, openModal, closeModal} = useModal();
+    const {isOpen: isBulkOpen, openModal: openBulkModal, closeModal: closeBulkModal} = useModal();
     const [selectedAsset, setSelectedAsset] = useState<AssetData>();
     const [action, setAction] = useState<ActionTypes>(ActionTypes.CREATE);
 
@@ -39,7 +40,7 @@ export default function AssetTable() {
             try {
                 const response: Asset = await AssetService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setAssetData(response.assetData);
+                    setAssetData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -60,14 +61,13 @@ export default function AssetTable() {
     }
 
     const applyCategoryChange = (
-        action: string,
-        payload: CategoryData | number
+        action: string
     ) => {
         if (action === ActionTypes.CREATE|| action === ActionTypes.DELETE) {
             const fetchAssets = async () => {
                 try {
                     const response: Asset = await AssetService.getAll(currentPage, pageSize);
-                    setAssetData(response.assetData);
+                    setAssetData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching assets:', error);
@@ -116,9 +116,27 @@ export default function AssetTable() {
                 asset={selectedAsset}
                 onSuccess={applyCategoryChange}
             />
+            <BulkAssetModal
+                isOpen={isBulkOpen}
+                closeModal={closeBulkModal}
+                onSuccess={applyCategoryChange}
+            />
             <PageBreadcrumb pageTitle="Asset"/>
             <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-3">
+                    <button
+                        onClick={openBulkModal}
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-white/[0.03]"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                             className="size-4">
+                            <path
+                                d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z"/>
+                            <path
+                                d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/>
+                        </svg>
+                        Upload Bulk
+                    </button>
                     <button
                         onClick={openModalCreate}
                         className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 active:bg-indigo-700 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
@@ -138,13 +156,18 @@ export default function AssetTable() {
                         className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                         <div className="max-w-full overflow-x-auto">
                             <div className="min-w-[1102px] p-4">
+                                {
+                                    totalPages <= 0 && (
+                                        <div className="text-center text-white">No Assets Available</div>
+                                    )
+                                }
                                 <div className="grid grid-cols-4 gap-4">
                                     {assetData.map((asset) => (
                                         <div key={asset.id}
                                              className="p-2 rounded-xl border border-gray-300 shadow-xs dark:text-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                                             <a href="#">
                                                 <img
-                                                    className="rounded-lg w-full h-[200px] object-cover"
+                                                    className="rounded-lg w-full h-[200px] object-contain"
                                                     src={"/media" + asset.path}
                                                     alt={asset.name}
                                                 />

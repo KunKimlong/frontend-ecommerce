@@ -6,7 +6,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import {useStoreLogo} from "@/hooks/useStoreLogo";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState ,useEffect,useRef} from "react";
+import { useState ,useEffect,useRef} from "react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);

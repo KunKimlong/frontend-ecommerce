@@ -1,55 +1,49 @@
-// contexts/UserContext.tsx
 import {createContext, useContext, useEffect, useState, ReactNode} from 'react';
-import {jwtDecode} from 'jwt-decode';
 import Cookies from 'js-cookie';
-
-interface User {
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-}
+import {MeResponse} from "@/type/Auth";
+import {AuthService} from "@/service/auth.service";
 
 interface UserContextType {
-    user: User | null;
-    setUser: (user: User) => void;
+    user: MeResponse | null;
+    setUser: (user: MeResponse | null) => void;
+    logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({children}: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<MeResponse | null>(null);
+
+    const logout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            Cookies.remove('authToken');
+            setUser(null);
+            window.location.href = '/signin';
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
 
     useEffect(() => {
-        const token = Cookies.get('token');
-        console.log("Token: ", token);
+        const token = Cookies.get('authToken');
         if (token) {
-            try {
-                const decoded: any = jwtDecode(token);
-                console.log("Get token from backend");
-                console.log(decoded);
-                setUser(
-                    {
-                        username: decoded.sub,
-                        email: decoded.email,
-                        firstName: decoded.firstName,
-                        lastName: decoded.lastName,
-                    }
-                );
-            } catch (err) {
-                console.error('Invalid token', err);
-            }
+            AuthService.me().then((user) =>{
+                setUser(user);
+            }).catch((err) => {
+                console.error('Failed to fetch user', err);
+                setUser(null);
+            });
         }
     }, []);
 
     return (
-        <UserContext.Provider value={{user, setUser}}>
+        <UserContext.Provider value={{user, setUser, logout}}>
             {children}
         </UserContext.Provider>
     );
 };
 
-// Hook for components
 export const useUser = () => {
     const context = useContext(UserContext);
     if (!context) throw new Error('useUser must be inside UserProvider');

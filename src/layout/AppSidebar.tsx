@@ -1,9 +1,10 @@
-
-import React, {useCallback, useEffect, useRef, useState} from "react";
+"use client";
+import React,{useCallback, useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {usePathname} from "next/navigation";
 import {useSidebar} from "../context/SidebarContext";
+import {useUser} from "../context/UserContext";
 import {useStoreLogo} from "@/hooks/useStoreLogo";
 import {
   BoxCubeIcon,
@@ -26,6 +27,17 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+const moduleMap: Record<string, string[]> = {
+  Users: ["user", "employee"],
+  Category: ["category"],
+  Option: ["option"],
+  Asset: ["asset"],
+  Product: ["product"],
+  Banner: ["banner"],
+  Roles: ["role"],
+  Permissions: ["role"],
+};
+
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
@@ -34,8 +46,8 @@ const navItems: NavItem[] = [
   },
   {
     icon:'',
-    name: "Employee",
-    path: "/employee",
+    name: "Users",
+    path: "/users",
   },
   {
     icon:'',
@@ -47,8 +59,8 @@ const navItems: NavItem[] = [
         pro: false,
       },
       {
-        name: "Color",
-        path: "/color",
+        name: "Option",
+        path: "/option",
         pro: false,
       },
       {
@@ -64,10 +76,31 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    icon:'',
-    name: "Store",
-    path: "/product/store",
+    icon: '',
+    name: "Banner",
+    path: "/banner",
   },
+  {
+    icon: '',
+    name: "Access Control",
+    subItems: [
+      {
+        name: "Roles",
+        path: "/role",
+        pro: false,
+      },
+      {
+        name: "Permissions",
+        path: "/permission",
+        pro: false,
+      },
+    ]
+  },
+    {
+        icon:'',
+        name: "Store",
+        path: "/product/store",
+    },
   {
     icon: <CalenderIcon />,
     name: "Calendar",
@@ -132,8 +165,27 @@ const othersItems: NavItem[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { user } = useUser();
   const pathname = usePathname();
   const {logoUrl, storeName} = useStoreLogo();
+
+  const userPermissions: string[] = user?.permissions ?? [];
+
+  const hasPermission = (itemName: string): boolean => {
+    const modules = moduleMap[itemName];
+    if (!modules) return true;
+    return userPermissions.some(p => modules.some(m => p.startsWith(m + ":")));
+  };
+
+  const filterNavItems = (items: NavItem[]): NavItem[] => {
+    return items.filter(item => {
+      if (item.subItems) {
+        const visibleSubItems = item.subItems.filter(sub => hasPermission(sub.name));
+        return visibleSubItems.length > 0;
+      }
+      return hasPermission(item.name);
+    });
+  };
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -270,14 +322,12 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => path === pathname;
    const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
-    // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? filterNavItems(navItems) : filterNavItems(othersItems);
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -293,11 +343,10 @@ const AppSidebar: React.FC = () => {
       });
     });
 
-    // If no submenu item matches, close the open submenu
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [pathname,isActive]);
+  }, [pathname, isActive, userPermissions]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -412,7 +461,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filterNavItems(navItems), "main")}
             </div>
 
             <div className="">
@@ -429,7 +478,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(filterNavItems(othersItems), "others")}
             </div>
           </div>
         </nav>

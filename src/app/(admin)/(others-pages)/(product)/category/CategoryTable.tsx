@@ -1,5 +1,4 @@
 "use client";
-
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
@@ -53,7 +52,7 @@ export default function CategoryTable() {
             try {
                 const response: Category = await CategoryService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setCategoryData(response.categoryData);
+                    setCategoryData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
@@ -87,13 +86,13 @@ export default function CategoryTable() {
 
     const applyCategoryChange = (
         action: string,
-        payload: CategoryData | number
+        _payload: CategoryData | number
     ) => {
         if (action === ActionTypes.CREATE || action === ActionTypes.UPDATE || action === ActionTypes.DELETE) {
             const fetchCategories = async () => {
                 try {
                     const response: Category = await CategoryService.getAll(currentPage, pageSize);
-                    setCategoryData(response.categoryData);
+                    setCategoryData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
                     console.error('Error fetching categories:', error);

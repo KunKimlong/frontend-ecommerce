@@ -1,7 +1,6 @@
 "use client";
-// import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-
+import { colors } from "@/constant/colors";
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { MoreDotIcon } from "@/icons";
@@ -15,7 +14,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 export default function MonthlyTarget() {
   const series = [75.55];
   const options: ApexOptions = {
-    colors: ["#465FFF"],
+    colors: [colors.primary],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "radialBar",
@@ -54,7 +53,7 @@ export default function MonthlyTarget() {
     },
     fill: {
       type: "solid",
-      colors: ["#465FFF"],
+      colors: [colors.primary],
     },
     stroke: {
       lineCap: "round",

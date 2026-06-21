@@ -1,7 +1,4 @@
 import {Modal} from "@/components/ui/modal/index";
-import {ActionTypes} from "@/constant/actionType";
-import Button from "@/components/ui/button/Button";
-import React from "react";
 
 interface ModalProps {
     isOpen: boolean;

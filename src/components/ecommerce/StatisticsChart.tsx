@@ -1,7 +1,6 @@
 "use client";
-import React from "react";
-// import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import { colors } from "@/constant/colors";
 import ChartTab from "../common/ChartTab";
 import dynamic from "next/dynamic";
 
@@ -17,7 +16,7 @@ export default function StatisticsChart() {
       position: "top",
       horizontalAlign: "left",
     },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
+    colors: [colors.primary, colors.brand[300]],
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,

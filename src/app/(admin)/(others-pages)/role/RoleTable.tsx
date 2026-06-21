@@ -3,28 +3,27 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import React, {useEffect, useRef, useState} from "react";
-import Image from "next/image";
+import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useRouter} from "next/navigation";
 import {MoreDotIcon} from "@/icons";
 import ActionDropdown from "@/components/common/ActionDropdown";
-import {Employee, EmployeeData} from "@/type/Employee";
-import {EmployeeService} from "@/service/employee.service";
+import {RoleService} from "@/service/role.service";
 import {ActionTypes} from "@/constant/actionType";
-import EmployeeModal from "@/app/(admin)/(others-pages)/employee/EmployeeModal";
+import {RoleData, Role} from "@/type/Role";
+import RoleModal from "@/app/(admin)/(others-pages)/role/RoleModal";
 
-export default function EmployeeTable() {
+export default function RoleTable() {
     const router = useRouter();
     const {isOpen, openModal, closeModal} = useModal();
     const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData>();
+    const [selectedRole, setSelectedRole] = useState<RoleData>();
 
-    const [employeeData, setEmployeeData] = useState<EmployeeData[]>([]);
+    const [roleData, setRoleData] = useState<RoleData[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
-    const [pageSize] = useState(5);
+    const [pageSize] = useState(10);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -32,7 +31,6 @@ export default function EmployeeTable() {
                 setOpenDropdownId(null);
             }
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
@@ -41,56 +39,54 @@ export default function EmployeeTable() {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
 
-    const fetchEmployees = async () => {
+    const fetchRoles = async () => {
         try {
-            const response: Employee = await EmployeeService.getAll(currentPage, pageSize);
-            setEmployeeData(response.employeeData);
+            const response: Role = await RoleService.getAll(currentPage, pageSize);
+            setRoleData(response.data);
             setTotalItems(response.total);
         } catch (error) {
-            console.error("Error fetching employees:", error);
+            console.error("Error fetching roles:", error);
         }
     };
 
     useEffect(() => {
         let isMounted = true;
-
         const load = async () => {
             try {
-                const response: Employee = await EmployeeService.getAll(currentPage, pageSize);
+                const response: Role = await RoleService.getAll(currentPage, pageSize);
                 if (isMounted) {
-                    setEmployeeData(response.employeeData);
+                    setRoleData(response.data);
                     setTotalItems(response.total);
                 }
             } catch (error) {
-                console.error("Error fetching employees:", error);
+                console.error("Error fetching roles:", error);
             }
         };
-
         load();
         return () => {
             isMounted = false;
         };
     }, [currentPage, pageSize]);
 
-    const handleEditEmployee = (employee: EmployeeData) => {
+    const handleEditRole = (role: RoleData) => {
         setOpenDropdownId(null);
-        router.push(`/employee/${employee.id}/edit`);
+        router.push(`/role/${role.id}/edit`);
     };
 
-    const handleDeleteEmployee = (employee: EmployeeData) => {
+    const handleDeleteRole = (role: RoleData) => {
         setOpenDropdownId(null);
-        setSelectedEmployee(employee);
+        setSelectedRole(role);
         openModal();
     };
 
     const handleCloseModal = () => {
-        setSelectedEmployee(undefined);
+        setSelectedRole(undefined);
         closeModal();
     };
 
-    const applyEmployeeChange = (action: string) => {
+    const applyRoleChange = (action: string) => {
         if (action === ActionTypes.DELETE) {
-            fetchEmployees();
+            fetchRoles();
         }
     };
 
@@ -100,7 +96,6 @@ export default function EmployeeTable() {
     const getPageNumbers = () => {
         const pageNumbers: (number | string)[] = [];
         const maxVisiblePages = 5;
-
         if (totalPages <= maxVisiblePages) {
             for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
         } else {
@@ -112,7 +107,6 @@ export default function EmployeeTable() {
             if (displayPage < totalPages - 2) pageNumbers.push("...");
             if (totalPages > 1) pageNumbers.push(totalPages);
         }
-
         return pageNumbers;
     };
 
@@ -122,19 +116,19 @@ export default function EmployeeTable() {
 
     return (
         <div>
-            <EmployeeModal
+            <RoleModal
                 isOpen={isOpen}
                 closeModal={handleCloseModal}
                 action={ActionTypes.DELETE}
-                employee={selectedEmployee}
-                onSuccess={applyEmployeeChange}
+                role={selectedRole}
+                onSuccess={applyRoleChange}
             />
 
-            <PageBreadcrumb pageTitle="Employee"/>
+            <PageBreadcrumb pageTitle="Role"/>
             <div className="space-y-6">
                 <div className="flex justify-end">
-                    <Button size="sm" variant="primary" onClick={() => router.push("/employee/create")}>
-                        + Employee
+                    <Button size="sm" variant="primary" onClick={() => router.push("/role/create")}>
+                        + Role
                     </Button>
                 </div>
 
@@ -142,7 +136,7 @@ export default function EmployeeTable() {
                     <div
                         className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                         <div className="max-w-full overflow-x-auto">
-                            <div className="min-w-[1102px]">
+                            <div className="min-w-[700px]">
                                 <Table>
                                     <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                                         <TableRow>
@@ -152,27 +146,11 @@ export default function EmployeeTable() {
                                             </TableCell>
                                             <TableCell isHeader
                                                        className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Profile
+                                                Name
                                             </TableCell>
                                             <TableCell isHeader
                                                        className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Full Name
-                                            </TableCell>
-                                            <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Email
-                                            </TableCell>
-                                            <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Phone
-                                            </TableCell>
-                                            <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Gender
-                                            </TableCell>
-                                            <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
-                                                Join Date
+                                                Description
                                             </TableCell>
                                             <TableCell isHeader
                                                        className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400">
@@ -182,82 +160,37 @@ export default function EmployeeTable() {
                                     </TableHeader>
 
                                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {employeeData.map((employee, index) => (
-                                            <TableRow key={employee.id}>
+                                        {roleData.map((role, index) => (
+                                            <TableRow key={role.id}>
                                                 <TableCell
                                                     className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                                                     {currentPage * pageSize + index + 1}
                                                 </TableCell>
-
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <div
-                                                        className="w-10 h-10 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                                                        {employee.imageUrl ? (
-                                                            <Image
-                                                                src={`/media${employee.imageUrl.replace(/^\/api\/asset/, '')}`}
-                                                                alt={`${employee.firstName} ${employee.lastName}`}
-                                                                width={40}
-                                                                height={40}
-                                                                className="h-full w-full object-cover"
-                                                                unoptimized
-                                                            />
-                                                        ) : (
-                                                            <div
-                                                                className="h-full w-full flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-300">
-                                                                {`${employee.firstName?.[0] ?? ""}${employee.lastName?.[0] ?? ""}`.toUpperCase() || "N/A"}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <span
                                                         className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.firstName} {employee.lastName}
+                                                        {role.name}
                                                     </span>
                                                 </TableCell>
-
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <span
-                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.email}
+                                                        className="block text-gray-500 text-theme-sm dark:text-gray-400">
+                                                        {role.description || "-"}
                                                     </span>
                                                 </TableCell>
-
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span
-                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.phone || "-"}
-                                                    </span>
-                                                </TableCell>
-
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span
-                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.gender}
-                                                    </span>
-                                                </TableCell>
-
-                                                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                    <span
-                                                        className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                        {employee.joinDate}
-                                                    </span>
-                                                </TableCell>
-
                                                 <TableCell className="px-4 py-3 text-gray-500 text-sm">
                                                     <div className="relative"
-                                                         ref={openDropdownId === employee.id ? dropdownRef : null}>
-                                                        <button onClick={() => toggleDropdown(employee.id)}
+                                                         ref={openDropdownId === role.id ? dropdownRef : null}>
+                                                        <button onClick={() => toggleDropdown(role.id)}
                                                                 className="p-2">
                                                             <MoreDotIcon/>
                                                         </button>
-                                                        {openDropdownId === employee.id && (
+                                                        {openDropdownId === role.id && (
                                                             <ActionDropdown
-                                                                data={employee}
-                                                                onEdit={handleEditEmployee}
-                                                                onDelete={handleDeleteEmployee}
-                                                                onView={() => router.push(`/employee/${employee.id}`)}
+                                                                data={role}
+                                                                onEdit={handleEditRole}
+                                                                onDelete={handleDeleteRole}
+                                                                onView={() => router.push(`/role/${role.id}`)}
                                                             />
                                                         )}
                                                     </div>

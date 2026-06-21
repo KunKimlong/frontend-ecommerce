@@ -1,5 +1,26 @@
 @import 'tailwindcss';
 
+/* =============================================
+   🎨 COLOR PALETTE — Change values below to
+   customize the entire app color scheme.
+   Update the :root variables, then update the
+   matching exports in src/constant/colors.ts
+   ============================================= */
+:root {
+  --brand-25: #f2f7ff;
+  --brand-50: #ecf3ff;
+  --brand-100: #dde9ff;
+  --brand-200: #c2d6ff;
+  --brand-300: #9cb9ff;
+  --brand-400: #7592ff;
+  --brand-500: #465fff;
+  --brand-600: #3641f5;
+  --brand-700: #2a31d8;
+  --brand-800: #252dae;
+  --brand-900: #262e89;
+  --brand-950: #161950;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -38,18 +59,23 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  --color-brand-25: var(--brand-25);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+  --color-brand: var(--brand-500);
+  --color-primary: var(--brand-500);
+  --color-primary-50: var(--brand-50);
+  --color-primary-100: var(--brand-100);
+  --color-secondary: var(--color-gray-700);
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -740,4 +766,31 @@ span.flatpickr-weekday,
 }
 .modal .modal-body .modal-form-group, .modal .modal-title{
   padding: 10px;
+}
+
+/* in your global CSS or flatpickr override file */
+.flatpickr-calendar {
+  width: unset !important;
+}
+
+.flatpickr-rContainer {
+  width: 100% !important;
+}
+
+.flatpickr-days {
+  width: 100% !important;
+}
+
+.dayContainer {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 0 !important;
+}
+
+.flatpickr-day {
+  max-width: unset !important;
+  width: 100% !important;
 }

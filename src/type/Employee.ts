@@ -1,3 +1,5 @@
+import {AuditableResult} from "@/type/User";
+
 export interface Employee {
     employeeData: EmployeeData[];
     total: number;
@@ -5,24 +7,18 @@ export interface Employee {
     pageSize: number;
 }
 
-export interface EmployeeCreatedBy {
-    id: number;
-    firstName: string;
-    lastName: string;
-}
-
 export interface EmployeeData {
     id: number;
+    userId: number;
     firstName: string;
     lastName: string;
     gender: string;
     email: string;
     phone: string;
     joinDate: string;
-    assetId?: number | null;
     imageUrl?: string | null;
-    createdBy?: EmployeeCreatedBy | null;
-    updatedBy?: EmployeeCreatedBy | null;
+    createdBy?: AuditableResult | null;
+    updatedBy?: AuditableResult | null;
 }
 
 export interface EmployeeCreateRequest {

@@ -1,7 +1,7 @@
-import {User} from "@/type/User";
+import {AuditableResult, User} from "@/type/User";
 
 export interface Category {
-    categoryData: CategoryData[];
+    data: CategoryData[];
     total: number;
     page: number;
     pageSize: number;
@@ -10,6 +10,6 @@ export interface Category {
 export interface CategoryData {
     id: number;
     name: string;
-    createdBy: User;
-    updatedBy: User;
+    createdBy: AuditableResult;
+    updatedBy: AuditableResult;
 }

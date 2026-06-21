@@ -1,38 +1,60 @@
 "use client";
-import React, {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
 import DatePicker from "@/components/form/date-picker";
-import {EmployeeService} from "@/service/employee.service";
-import {EmployeeCreateRequest, EmployeeData} from "@/type/Employee";
+import MultiSelect from "@/components/form/MultiSelect";
+import {UserService} from "@/service/user.service";
+import {RoleService} from "@/service/role.service";
+import {UserData, UserRequest} from "@/type/User";
 
-interface EmployeeFormProps {
-    employee?: EmployeeData;
+interface UserFormProps {
+    user?: UserData;
 }
 
-export default function EmployeeForm({employee}: EmployeeFormProps) {
+export default function UserForm({user}: UserFormProps) {
     const router = useRouter();
-    const isEdit = !!employee;
+    const isEdit = !!user;
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [firstName, setFirstName] = useState(employee?.firstName ?? "");
-    const [lastName, setLastName] = useState(employee?.lastName ?? "");
-    const [gender, setGender] = useState(employee?.gender ?? "");
-    const [email, setEmail] = useState(employee?.email ?? "");
+    const [firstName, setFirstName] = useState(user?.firstName ?? "");
+    const [lastName, setLastName] = useState(user?.lastName ?? "");
+    const [gender, setGender] = useState(user?.gender ?? "");
+    const [email, setEmail] = useState(user?.email ?? "");
     const [password, setPassword] = useState("");
-    const [joinDate, setJoinDate] = useState(employee?.joinDate ?? "");
-    const [phone, setPhone] = useState(employee?.phone ?? "");
+    const [joinDate, setJoinDate] = useState(user?.joinDate ?? "");
+    const [phone, setPhone] = useState(user?.phone ?? "");
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(
-        employee?.imageUrl ? `/media${employee.imageUrl.replace(/^\/api\/asset/, '')}` : null
+        user?.imageUrl ? `/media${user.imageUrl.replace(/^\/api\/asset/, '')}` : null
     );
+
+    const [allRoles, setAllRoles] = useState<{id: number; name: string}[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const rolesRes = await RoleService.getAll(0, 50);
+                setAllRoles(rolesRes.data);
+
+                if (isEdit && user) {
+                    const userRoles = await UserService.getRoles(user.id);
+                    setSelectedRoles(userRoles.map(r => String(r.id)));
+                }
+            } catch {
+                console.error("Failed to load roles");
+            }
+        };
+        fetchData();
+    }, []);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -71,7 +93,7 @@ export default function EmployeeForm({employee}: EmployeeFormProps) {
         setLoading(true);
         setError("");
 
-        const payload: EmployeeCreateRequest = {
+        const payload: UserRequest = {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             gender,
@@ -79,16 +101,17 @@ export default function EmployeeForm({employee}: EmployeeFormProps) {
             ...(!isEdit ? {password} : {}),
             phone: phone.trim(),
             joinDate,
+            roleIds: selectedRoles.map(Number),
         };
 
         try {
-            if (isEdit && employee) {
-                await EmployeeService.update(employee.id, payload, selectedFile ?? undefined);
+            if (isEdit && user) {
+                await UserService.update(user.id, payload, selectedFile ?? undefined);
             } else {
-                await EmployeeService.save(payload, selectedFile ?? undefined);
+                await UserService.save(payload, selectedFile ?? undefined);
             }
 
-            router.push("/employee");
+            router.push("/users");
         } catch (err: any) {
             setError(err.message || "Something went wrong");
         } finally {
@@ -102,7 +125,7 @@ export default function EmployeeForm({employee}: EmployeeFormProps) {
 
     return (
         <div>
-            <PageBreadcrumb pageTitle={isEdit ? "Edit Employee" : "Add Employee"}/>
+            <PageBreadcrumb pageTitle={isEdit ? "Edit User" : "Add User"}/>
             <div className="space-y-6">
                 <ComponentCard>
                     <div className="p-6 lg:p-8 space-y-5">
@@ -232,7 +255,7 @@ export default function EmployeeForm({employee}: EmployeeFormProps) {
                             </div>
                         </div>
 
-                        <div className={`grid grid-cols-1 ${!isEdit ? 'sm:grid-cols-2' : ''} gap-4`}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="email" className={labelClass}>Email</label>
                                 <input
@@ -288,15 +311,29 @@ export default function EmployeeForm({employee}: EmployeeFormProps) {
                             </div>
                         </div>
 
+                        <div>
+                            <MultiSelect
+                                label="Roles"
+                                options={allRoles.map(r => ({
+                                    value: String(r.id),
+                                    text: r.name,
+                                    selected: selectedRoles.includes(String(r.id)),
+                                }))}
+                                defaultSelected={selectedRoles}
+                                onChange={setSelectedRoles}
+                                disabled={loading}
+                            />
+                        </div>
+
                         <div className="flex items-center gap-3 pt-2">
                             <Button size="sm" variant="primary" onClick={handleSubmit} disabled={loading}>
                                 {loading
                                     ? isEdit ? "Updating..." : "Saving..."
-                                    : isEdit ? "Update Employee" : "+ Add Employee"}
+                                    : isEdit ? "Update User" : "+ Add User"}
                             </Button>
                             <button
                                 type="button"
-                                onClick={() => router.push("/employee")}
+                                onClick={() => router.push("/users")}
                                 disabled={loading}
                                 className="flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] disabled:opacity-50"
                             >
