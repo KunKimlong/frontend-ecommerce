@@ -22,7 +22,7 @@ export default function EmployeeDetailPage() {
                 const data: EmployeeData = await EmployeeService.getById(Number(id));
                 setEmployee(data);
             } catch {
-                setError("Failed to load employee");
+            setError("Failed to load employee");
             } finally {
                 setLoading(false);
             }

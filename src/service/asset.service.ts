@@ -6,8 +6,23 @@ export const AssetService = {
         return http.get(`/asset?page=${currentPage}&size=${pageSize}`).then((res) => res.data);
     },
 
-    save(data: FormData): Promise<AssetData> {
-        return http.post("/asset/upload", data, {
+    save(data: FormData, assetType?: string): Promise<AssetData> {
+        if (assetType) {
+            if (!data.get("assetType")) {
+                data.append("assetType", assetType);
+            }
+
+            // Keep legacy field for backward compatibility with older API handlers.
+            if (!data.get("type")) {
+                data.append("type", assetType);
+            }
+        }
+
+        const endpoint = assetType
+            ? `/asset/upload?assetType=${encodeURIComponent(assetType)}&type=${encodeURIComponent(assetType)}`
+            : "/asset/upload";
+
+        return http.post(endpoint, data, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
