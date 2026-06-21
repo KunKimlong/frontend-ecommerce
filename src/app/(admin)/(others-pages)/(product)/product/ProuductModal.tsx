@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Button from "@/components/ui/button/Button";
 import {ActionTypes} from "@/constant/actionType";
 import {ProductData} from "@/type/Product";

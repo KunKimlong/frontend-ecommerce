@@ -1,10 +1,11 @@
 "use client";
-import {useCallback, useEffect, useRef, useState} from "react";
+import React,{useCallback, useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {usePathname} from "next/navigation";
 import {useSidebar} from "../context/SidebarContext";
 import {useUser} from "../context/UserContext";
+import {useStoreLogo} from "@/hooks/useStoreLogo";
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -95,6 +96,11 @@ const navItems: NavItem[] = [
       },
     ]
   },
+    {
+        icon:'',
+        name: "Store",
+        path: "/product/store",
+    },
   {
     icon: <CalenderIcon />,
     name: "Calendar",
@@ -161,6 +167,7 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const { user } = useUser();
   const pathname = usePathname();
+  const {logoUrl, storeName} = useStoreLogo();
 
   const userPermissions: string[] = user?.permissions ?? [];
 
@@ -388,30 +395,52 @@ const AppSidebar: React.FC = () => {
         }`}
       >
         <Link href="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+          {logoUrl ? (
+              isExpanded || isHovered || isMobileOpen ? (
+                  <div
+                      className="h-14 w-[224px] overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.06]">
+                      <img
+                          src={logoUrl}
+                          alt={storeName ?? "Store Logo"}
+                          className="h-full w-full object-cover object-center"
+                      />
+                  </div>
+              ) : (
+                  <div
+                      className="h-8 w-8 overflow-hidden rounded-md border border-gray-200 bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.06]">
+                      <img
+                          src={logoUrl}
+                          alt={storeName ?? "Store Logo"}
+                          className="h-full w-full object-cover object-center"
+                      />
+                  </div>
+              )
           ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+              isExpanded || isHovered || isMobileOpen ? (
+                  <>
+                      <Image
+                          className="dark:hidden"
+                          src="/images/logo/logo.svg"
+                          alt="Logo"
+                          width={220}
+                          height={56}
+                      />
+                      <Image
+                          className="hidden dark:block"
+                          src="/images/logo/logo-dark.svg"
+                          alt="Logo"
+                          width={220}
+                          height={56}
+                      />
+                  </>
+              ) : (
+                  <Image
+                      src="/images/logo/logo-icon.svg"
+                      alt="Logo"
+                      width={32}
+                      height={32}
+                  />
+              )
           )}
         </Link>
       </div>
@@ -459,3 +488,4 @@ const AppSidebar: React.FC = () => {
 };
 
 export default AppSidebar;
+

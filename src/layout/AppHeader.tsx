@@ -1,14 +1,16 @@
-"use client";
+
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
+import {useStoreLogo} from "@/hooks/useStoreLogo";
 import Image from "next/image";
 import Link from "next/link";
 import { useState ,useEffect,useRef} from "react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const {logoUrl, storeName} = useStoreLogo();
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -84,20 +86,33 @@ const AppHeader: React.FC = () => {
           </button>
 
           <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
-            />
+           {logoUrl ? (
+                <div
+                    className="h-8 w-[154px] overflow-hidden rounded-md border border-gray-200 bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.06]">
+                  <img
+                      src={logoUrl}
+                      alt={storeName ?? "Store Logo"}
+                      className="h-full w-full object-cover object-center"
+                  />
+                </div>
+            ) : (
+                <>
+                  <Image
+                      width={154}
+                      height={32}
+                      className="dark:hidden"
+                      src="./images/logo/logo.svg"
+                      alt="Logo"
+                  />
+                  <Image
+                      width={154}
+                      height={32}
+                      className="hidden dark:block"
+                      src="./images/logo/logo-dark.svg"
+                      alt="Logo"
+                  />
+                </>
+            )}
           </Link>
 
           <button

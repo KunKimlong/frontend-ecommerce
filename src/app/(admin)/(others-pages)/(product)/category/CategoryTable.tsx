@@ -3,7 +3,7 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Button from "@/components/ui/button/Button";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import CategoryModal from "@/app/(admin)/(others-pages)/(product)/category/CategoryModal";
 import {MoreDotIcon} from "@/icons";
@@ -48,10 +48,8 @@ export default function CategoryTable() {
 
     useEffect(() => {
         let isMounted = true;
-
         const fetchCategories = async () => {
             try {
-
                 const response: Category = await CategoryService.getAll(currentPage, pageSize);
                 if (isMounted) {
                     setCategoryData(response.data);
