@@ -25,6 +25,8 @@ export default function CategoryTable() {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0); // API uses 0-based indexing
     const [pageSize] = useState(5);
+    const [searchName, setSearchName] = useState("");
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -48,11 +50,29 @@ export default function CategoryTable() {
         setAction(ActionTypes.CREATE);
     }
 
+    const handleSearchChange = (value: string) => {
+        setSearchName(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            const fetchCategories = async () => {
+                try {
+                    const response: Category = await CategoryService.getAll(0, pageSize, value);
+                    setCategoryData(response.data);
+                    setTotalItems(response.total);
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                }
+            };
+            fetchCategories();
+        }, 400);
+    };
+
     useEffect(() => {
         let isMounted = true;
         const fetchCategories = async () => {
             try {
-                const response: Category = await CategoryService.getAll(currentPage, pageSize);
+                const response: Category = await CategoryService.getAll(currentPage, pageSize, searchName);
                 if (isMounted) {
                     setCategoryData(response.data);
                     setTotalItems(response.total);
@@ -67,7 +87,7 @@ export default function CategoryTable() {
         return () => {
             isMounted = false;
         };
-    }, [currentPage, pageSize]);
+    }, [currentPage, pageSize, searchName]);
 
     const handleEditCategory = (category: CategoryData) => {
         openModal();
@@ -93,7 +113,7 @@ export default function CategoryTable() {
         if (action === ActionTypes.CREATE || action === ActionTypes.UPDATE || action === ActionTypes.DELETE) {
             const fetchCategories = async () => {
                 try {
-                    const response: Category = await CategoryService.getAll(currentPage, pageSize);
+                    const response: Category = await CategoryService.getAll(currentPage, pageSize, searchName);
                     setCategoryData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
@@ -159,7 +179,22 @@ export default function CategoryTable() {
             />
             <PageBreadcrumb pageTitle="Category"/>
             <div className="space-y-6">
-                <div className={"flex justify-end"}>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
+                                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={searchName}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        />
+                    </div>
                     {can("category:create") && (
                         <Button size="sm" variant="primary" onClick={openModalCreate}>
                             + Category
@@ -180,6 +215,12 @@ export default function CategoryTable() {
                                                 className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
                                             >
                                                 N <sup>o</sup>
+                                            </TableCell>
+                                            <TableCell
+                                                isHeader
+                                                className="px-5 py-3 font-bold text-gray-500 text-start dark:text-gray-400"
+                                            >
+                                                Image
                                             </TableCell>
                                             <TableCell
                                                 isHeader
@@ -214,6 +255,26 @@ export default function CategoryTable() {
                                                 <TableCell
                                                     className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                                                     {currentPage * pageSize + index + 1}
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-start">
+                                                    {category.asset?.uuid ? (
+                                                        <img
+                                                            src={`/media/image/${category.asset.uuid}`}
+                                                            alt={category.name}
+                                                            className="w-10 h-10 rounded-md object-cover border border-gray-200 dark:border-gray-700"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="w-10 h-10 rounded-md bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none"
+                                                                 viewBox="0 0 24 24">
+                                                                <rect x="3" y="3" width="18" height="18" rx="3"
+                                                                      stroke="currentColor" strokeWidth="1.5"/>
+                                                                <path d="M3 9h18" stroke="currentColor"
+                                                                      strokeWidth="1.5"/>
+                                                            </svg>
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                                                     <div className="flex items-center gap-3">

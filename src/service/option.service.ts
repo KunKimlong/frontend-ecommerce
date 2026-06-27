@@ -3,8 +3,10 @@ import {Option, OptionData, OptionRequest, OptionValue, OptionValueData, OptionV
 
 export const OptionService = {
     // Option endpoints
-    getAll(currentPage: number, pageSize: number): Promise<Option> {
-        return http.get(`/option?page=${currentPage}&size=${pageSize}`).then((res) => res.data);
+    getAll(currentPage: number, pageSize: number, name?: string): Promise<Option> {
+        let url = `/option?page=${currentPage}&size=${pageSize}`;
+        if (name) url += `&name=${encodeURIComponent(name)}`;
+        return http.get(url).then((res) => res.data);
     },
 
     getById(id: number): Promise<OptionData> {

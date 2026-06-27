@@ -23,8 +23,9 @@ export default function BannerForm({banner}: BannerFormProps) {
     // Form fields
     const [label, setLabel] = useState(banner?.label ?? "");
     const [headerLabel, setHeaderLabel] = useState(banner?.headerLabel ?? "");
-    const [bannerTypeId, setBannerTypeId] = useState<number | string>(banner?.bannerType?.id ?? "");
+    const [bannerTypeId, setBannerTypeId] = useState<number | string>(banner?.bannerTypeId ?? "");
     const [description, setDescription] = useState(banner?.description ?? "");
+    const [order, setOrder] = useState<number | string>(banner?.order ?? "");
     const [buttonName, setButtonName] = useState(banner?.buttonName ?? "");
     const [startAt, setStartAt] = useState(banner?.startAt?.slice(0, 10) ?? "");
     const [endAt, setEndAt] = useState(banner?.endAt?.slice(0, 10) ?? "");
@@ -136,6 +137,7 @@ export default function BannerForm({banner}: BannerFormProps) {
                 bannerTypeId: Number(bannerTypeId),
                 description,
                 buttonName,
+                order: order !== "" ? Number(order) : null,
                 productId: selectedProductId,
                 assetId: null, // assetId is handled via file upload on backend
                 startAt,
@@ -208,7 +210,7 @@ export default function BannerForm({banner}: BannerFormProps) {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
                                         <label htmlFor="banner-type" className={labelClass}>Type</label>
                                         <select
@@ -227,6 +229,21 @@ export default function BannerForm({banner}: BannerFormProps) {
                                                     {t.name.replace("_", " ")}
                                                 </option>
                                             ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="banner-order" className={labelClass}>Order / Level</label>
+                                        <select
+                                            id="banner-order"
+                                            value={order}
+                                            onChange={(e) => setOrder(e.target.value)}
+                                            disabled={loading}
+                                            className={inputClass}
+                                        >
+                                            <option value="">Select level</option>
+                                            <option value={1}>Level 1</option>
+                                            <option value={2}>Level 2</option>
+                                            <option value={3}>Level 3</option>
                                         </select>
                                     </div>
                                     <div>

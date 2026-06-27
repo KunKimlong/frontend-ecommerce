@@ -2,8 +2,10 @@ import http from "./http";
 import {Role, RoleData, RoleResponse, RoleRequest} from "@/type/Role";
 
 export const RoleService = {
-    getAll(currentPage: number, pageSize: number): Promise<Role> {
-        return http.get(`/admin/roles?page=${currentPage}&size=${pageSize}`).then((res) => res.data);
+    getAll(currentPage: number, pageSize: number, name?: string): Promise<Role> {
+        let url = `/admin/roles?page=${currentPage}&size=${pageSize}`;
+        if (name) url += `&name=${encodeURIComponent(name)}`;
+        return http.get(url).then((res) => res.data);
     },
 
     getById(id: number): Promise<RoleResponse> {

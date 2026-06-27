@@ -1,4 +1,5 @@
 "use client";
+import {useRef} from "react";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
 import {Table, TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
@@ -11,12 +12,34 @@ export default function PermissionTable() {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(20);
+    const [searchName, setSearchName] = useState("");
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearchChange = (value: string) => {
+        setSearchName(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            const load = async () => {
+                try {
+                    const response: Permission = await PermissionService.getAll(0, pageSize, value);
+                    if (true) {
+                        setPermissionData(response.data);
+                        setTotalItems(response.total);
+                    }
+                } catch (error) {
+                    console.error("Error fetching permissions:", error);
+                }
+            };
+            load();
+        }, 400);
+    };
 
     useEffect(() => {
         let isMounted = true;
         const load = async () => {
             try {
-                const response: Permission = await PermissionService.getAll(currentPage, pageSize);
+                const response: Permission = await PermissionService.getAll(currentPage, pageSize, searchName);
                 if (isMounted) {
                     setPermissionData(response.data);
                     setTotalItems(response.total);
@@ -29,7 +52,7 @@ export default function PermissionTable() {
         return () => {
             isMounted = false;
         };
-    }, [currentPage, pageSize]);
+    }, [currentPage, pageSize, searchName]);
 
     const totalPages = Math.ceil(totalItems / pageSize);
     const displayPage = currentPage + 1;
@@ -59,6 +82,21 @@ export default function PermissionTable() {
         <div>
             <PageBreadcrumb pageTitle="Permission"/>
             <div className="space-y-6">
+                <div className="relative flex-1 max-w-md">
+                    <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
+                            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        placeholder="Search by name..."
+                        value={searchName}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    />
+                </div>
                 <ComponentCard>
                     <div
                         className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">

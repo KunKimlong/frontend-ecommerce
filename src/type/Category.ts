@@ -1,4 +1,5 @@
-import {AuditableResult, User} from "@/type/User";
+import {AssetData} from "@/type/Asset";
+import {AuditableResult} from "@/type/User";
 
 export interface Category {
     data: CategoryData[];
@@ -10,6 +11,7 @@ export interface Category {
 export interface CategoryData {
     id: number;
     name: string;
+    asset?: AssetData;
     createdBy: AuditableResult;
     updatedBy: AuditableResult;
 }

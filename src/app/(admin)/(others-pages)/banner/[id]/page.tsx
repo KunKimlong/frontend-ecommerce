@@ -119,6 +119,12 @@ export default function BannerViewPage() {
                                     </p>
                                 </div>
                                 <div>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Order / Level</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                        {banner.order != null ? `Level ${banner.order}` : "-"}
+                                    </p>
+                                </div>
+                                <div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                                         {formatDate(banner.startAt)}

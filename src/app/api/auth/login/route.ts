@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const springBootUrl = process.env.SPRING_BOOT_API_URL || "http://localhost:168/api";
+        const springBootUrl = process.env.SPRING_BOOT_API_URL;
 
-        console.log('🔐 Attempting login to:', `${springBootUrl}/auth/login`);
+        console.log('Attempting login to:', `${springBootUrl}/auth/login`);
 
         const response = await fetch(`${springBootUrl}/auth/login`, {
             method: "POST",
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
-            console.error('❌ Login failed:', errorData);
+            console.error('Login failed:', errorData);
             return NextResponse.json(
                 { success: false, message: errorData.message || "Login failed" },
                 { status: response.status }
@@ -35,13 +35,12 @@ export async function POST(request: NextRequest) {
         }
 
         const data = await response.json();
-        console.log('✅ Login response:', { ...data, accessToken: data.accessToken ? '***' : undefined });
+        console.log('Login response:', { ...data, accessToken: data.accessToken ? '***' : undefined });
 
-        // ✅ Extract token (check different possible field names)
         const token = data.accessToken || data.access_token || data.token || data.jwt;
 
         if (!token) {
-            console.error('❌ No token in response:', Object.keys(data));
+            console.error('No token in response:', Object.keys(data));
             return NextResponse.json(
                 { success: false, message: "No token received from server" },
                 { status: 500 }
@@ -58,16 +57,15 @@ export async function POST(request: NextRequest) {
             { status: 200 }
         );
 
-        // ✅ Set cookie
         res.cookies.set("authToken", token, {
             httpOnly: false,
             secure: false,
             sameSite: "lax",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7  // 7 days
+            maxAge: 60 * 60 * 24 * 7
         });
 
-        console.log('🍪 Cookie set: authToken');
+        console.log('Cookie set: authToken');
 
         // Set refresh token if available
         const refreshToken = data.refreshToken || data.refresh_token;
@@ -79,14 +77,14 @@ export async function POST(request: NextRequest) {
                 path: "/",
                 maxAge: 60 * 60 * 24 * 30  // 30 days
             });
-            console.log('🍪 Cookie set: refreshToken');
+            console.log('Cookie set: refreshToken');
         }
 
         return res;
     } catch (error) {
-        console.error("❌ Login API error:", error);
+        console.error("Login API error:", error);
         return NextResponse.json(
-            { success: false, message: "Internal server error" },
+            { success: false, message: "Something went wrong. please contact to administrator" },
             { status: 500 }
         );
     }

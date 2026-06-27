@@ -3,8 +3,10 @@ import {Product, ProductData, ProductRequest} from "@/type/Product";
 let prefix = "/admin";
 export const ProductService = {
 
-    getAll(currentPage:number, pageSize: number): Promise<Product> {
-        return http.get(`${prefix}/product?page=${currentPage}&size=${pageSize}`).then((res) => res.data);
+    getAll(currentPage:number, pageSize: number, name?: string): Promise<Product> {
+        let url = `${prefix}/product?page=${currentPage}&size=${pageSize}`;
+        if (name) url += `&name=${encodeURIComponent(name)}`;
+        return http.get(url).then((res) => res.data);
     },
 
     getById(id: number): Promise<ProductData> {

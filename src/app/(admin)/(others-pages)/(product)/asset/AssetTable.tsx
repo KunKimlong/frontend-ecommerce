@@ -1,7 +1,7 @@
 "use client";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";  
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useModal} from "@/hooks/useModal";
 import {useUser} from "@/context/UserContext";
 import {ActionTypes} from "@/constant/actionType";
@@ -22,7 +22,8 @@ export default function AssetTable() {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(8);
-
+    const [searchName, setSearchName] = useState("");
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const openModalCreate = () => {
         openModal();
@@ -35,12 +36,30 @@ export default function AssetTable() {
         setAction(ActionTypes.DELETE);
     }
 
+    const handleSearchChange = (value: string) => {
+        setSearchName(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            const fetchAssets = async () => {
+                try {
+                    const response: Asset = await AssetService.getAll(0, pageSize, value);
+                    setAssetData(response.data);
+                    setTotalItems(response.total);
+                } catch (error) {
+                    console.error('Error fetching assets:', error);
+                }
+            };
+            fetchAssets();
+        }, 400);
+    };
+
     useEffect(() => {
         let isMounted = true;
 
         const fetchAssets = async () => {
             try {
-                const response: Asset = await AssetService.getAll(currentPage, pageSize);
+                const response: Asset = await AssetService.getAll(currentPage, pageSize, searchName);
                 if (isMounted) {
                     setAssetData(response.data);
                     setTotalItems(response.total);
@@ -55,7 +74,7 @@ export default function AssetTable() {
         return () => {
             isMounted = false;
         };
-    }, [currentPage, pageSize]);
+    }, [currentPage, pageSize, searchName]);
 
     const handleCloseModal = () => {
         setSelectedAsset(undefined);
@@ -68,7 +87,7 @@ export default function AssetTable() {
         if (action === ActionTypes.CREATE|| action === ActionTypes.DELETE) {
             const fetchAssets = async () => {
                 try {
-                    const response: Asset = await AssetService.getAll(currentPage, pageSize);
+                    const response: Asset = await AssetService.getAll(currentPage, pageSize, searchName);
                     setAssetData(response.data);
                     setTotalItems(response.total);
                 } catch (error) {
@@ -125,7 +144,23 @@ export default function AssetTable() {
             />
             <PageBreadcrumb pageTitle="Asset"/>
             <div className="space-y-6">
-                <div className="flex justify-end gap-3">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
+                                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={searchName}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3">
                     {can("asset:create") && (
                         <button
                             onClick={openBulkModal}
@@ -156,6 +191,7 @@ export default function AssetTable() {
                             Upload Asset
                         </button>
                     )}
+                </div>
                 </div>
                 <ComponentCard>
                     <div

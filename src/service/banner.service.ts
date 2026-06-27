@@ -4,8 +4,10 @@ import {Banner, BannerData, BannerRequest, BannerType} from "@/type/Banner";
 let prefix = "/admin";
 
 export const BannerService = {
-    getAll(currentPage: number, pageSize: number): Promise<Banner> {
-        return http.get(`${prefix}/banner?page=${currentPage}&size=${pageSize}`).then((res) => res.data);
+    getAll(currentPage: number, pageSize: number, label?: string): Promise<Banner> {
+        let url = `${prefix}/banner?page=${currentPage}&size=${pageSize}`;
+        if (label) url += `&label=${encodeURIComponent(label)}`;
+        return http.get(url).then((res) => res.data);
     },
 
     getById(id: number): Promise<BannerData> {

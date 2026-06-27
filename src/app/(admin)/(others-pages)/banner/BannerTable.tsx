@@ -26,6 +26,8 @@ export default function BannerTable() {
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize] = useState(5);
+    const [searchLabel, setSearchLabel] = useState("");
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const ACTIVE = "Active";
     const INACTIVE = "Inactive";
 
@@ -43,9 +45,9 @@ export default function BannerTable() {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
 
-    const fetchBanners = async () => {
+    const fetchBanners = async (label?: string) => {
         try {
-            const response: Banner = await BannerService.getAll(currentPage, pageSize);
+            const response: Banner = await BannerService.getAll(currentPage, pageSize, label || searchLabel);
             setBannerData(response.data);
             setTotalItems(response.total);
         } catch (error) {
@@ -53,11 +55,20 @@ export default function BannerTable() {
         }
     };
 
+    const handleSearchChange = (value: string) => {
+        setSearchLabel(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            fetchBanners(value);
+        }, 400);
+    };
+
     useEffect(() => {
         let isMounted = true;
         const load = async () => {
             try {
-                const response: Banner = await BannerService.getAll(currentPage, pageSize);
+                const response: Banner = await BannerService.getAll(currentPage, pageSize, searchLabel);
                 if (isMounted) {
                     setBannerData(response.data);
                     setTotalItems(response.total);
@@ -70,7 +81,7 @@ export default function BannerTable() {
         return () => {
             isMounted = false;
         };
-    }, [currentPage, pageSize]);
+    }, [currentPage, pageSize, searchLabel]);
 
     const handleViewBanner = (banner: BannerData) => {
         setOpenDropdownId(null)
@@ -95,7 +106,7 @@ export default function BannerTable() {
 
     const applyBannerChange = (action: string) => {
         if (action === ActionTypes.DELETE) {
-            fetchBanners();
+            fetchBanners(searchLabel);
         }
     };
 
@@ -162,7 +173,22 @@ export default function BannerTable() {
 
             <PageBreadcrumb pageTitle="Banner"/>
             <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
+                                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search by label..."
+                            value={searchLabel}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        />
+                    </div>
                     {can("banner:create") && (
                         <Button
                             size="sm"
@@ -195,11 +221,15 @@ export default function BannerTable() {
                                                 Header
                                             </TableCell>
                                             <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                                        className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Type
                                             </TableCell>
                                             <TableCell isHeader
-                                                       className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                                        className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
+                                                Order
+                                            </TableCell>
+                                            <TableCell isHeader
+                                                        className="px-5 py-3 font-bold text-gray-500 dark:text-gray-400">
                                                 Product Name
                                             </TableCell>
                                             <TableCell isHeader
@@ -243,6 +273,10 @@ export default function BannerTable() {
                                                         className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                                                         {banner.type}
                                                     </span>
+                                                </TableCell>
+                                                <TableCell
+                                                    className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                                                    {banner.order != null ? `Level ${banner.order}` : "—"}
                                                 </TableCell>
                                                 <TableCell
                                                     className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">

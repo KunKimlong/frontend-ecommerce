@@ -13,6 +13,7 @@ export interface BannerData {
     id: number;
     label: string;
     headerLabel: string;
+    bannerTypeId?: number;
     type: string;
     bannerType?: BannerType;
     description: string;
@@ -20,6 +21,7 @@ export interface BannerData {
     productId?: number;
     product?: ProductData;
     asset?: AssetData;
+    order: number | null;
     startAt: string;
     endAt: string;
     createdBy: AuditableResult | null;
@@ -34,6 +36,7 @@ export interface BannerRequest {
     buttonName: string;
     productId: number | null;
     assetId: number | null;
+    order: number | null;
     startAt: string;
     endAt: string;
 }

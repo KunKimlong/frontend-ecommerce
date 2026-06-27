@@ -31,6 +31,8 @@ export default function OptionTable() {
     const [optTotalItems, setOptTotalItems] = useState(0);
     const [optCurrentPage, setOptCurrentPage] = useState(0);
     const [optPageSize] = useState(5);
+    const [optSearchName, setOptSearchName] = useState("");
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Option Values Data
     const [valuesData, setValuesData] = useState<OptionValueData[]>([]);
@@ -65,14 +67,23 @@ export default function OptionTable() {
         }
     };
 
-    const fetchOptions = async () => {
+    const fetchOptions = async (name?: string) => {
         try {
-            const response: Option = await OptionService.getAll(optCurrentPage, optPageSize);
+            const response: Option = await OptionService.getAll(optCurrentPage, optPageSize, name || optSearchName);
             setOptionsData(response.data);
             setOptTotalItems(response.total);
         } catch (error) {
             console.error("Error fetching options:", error);
         }
+    };
+
+    const handleOptSearchChange = (value: string) => {
+        setOptSearchName(value);
+        setOptCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            fetchOptions(value);
+        }, 400);
     };
 
     const fetchOptionValues = async () => {
@@ -88,7 +99,7 @@ export default function OptionTable() {
     useEffect(() => {
         fetchOptions();
         fetchOptionsList();
-    }, [optCurrentPage, optPageSize]);
+    }, [optCurrentPage, optPageSize, optSearchName]);
 
     useEffect(() => {
         fetchOptionValues();
@@ -130,7 +141,7 @@ export default function OptionTable() {
 
     const applyChange = (_action: string, _payload: any) => {
         if (activeTab === "option") {
-            fetchOptions();
+            fetchOptions(optSearchName);
         } else {
             fetchOptionValues();
         }
@@ -199,7 +210,23 @@ export default function OptionTable() {
             
             <div className="space-y-6">
                 {/* Tabs & Add Button Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 20 20">
+                                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={optSearchName}
+                            onChange={(e) => handleOptSearchChange(e.target.value)}
+                            className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        />
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div className="flex border-b border-gray-200 dark:border-gray-800 w-full sm:w-auto">
                         <button
                             onClick={() => {
@@ -234,6 +261,7 @@ export default function OptionTable() {
                             + {activeTab === "option" ? "Option" : "Option Value"}
                         </Button>
                     )}
+                </div>
                 </div>
 
                 <ComponentCard>
